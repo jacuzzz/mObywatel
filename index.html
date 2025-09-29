@@ -504,7 +504,19 @@ p{
         
         setInterval(updateTime, 1000);
         updateTime();
-        
+        document.addEventListener('DOMContentLoaded', () => {
+    const video = document.querySelector('.flag_video');
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = true;
+    video.loop = true;
+    video.play().catch(() => {
+
+        document.body.addEventListener('click', () => {
+            video.play();
+        }, { once: true });
+    });
+});
 </script>
 </body>
 </html>
