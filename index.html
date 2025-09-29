@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Moja Apka">
-    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <link rel="icon" type="image/x-icon" href="ikonka.png">
     <title>mObywatel</title>
@@ -419,9 +414,14 @@ p{
             <source src="flaga1.mp4" type="video/mp4">
         </video>
 	<div style="position: absolute; top: 67%; left: 7.5%; z-index: 100; display: flex; align-items: center;">
-    <img src="rzecz123.gif" class="rzecz" style="width: 16%; height: auto;">
-    <p style="margin-left: 10px; font-size: 15px; color: #636058; font-family: 'Poppins', sans-serif;">Rzeczpospolita <br>Polska</p>
+  <video autoplay loop muted playsinline class="rzecz" style="width: 16%; height: auto;">
+    <source src="ptoszek.mp4" type="video/mp4">
+  </video>
+  <p style="margin-left: 10px; font-size: 15px; color: #636058; font-family: 'Poppins', sans-serif;">
+    Rzeczpospolita <br>Polska
+  </p>
 </div>
+
 
         <div class="id_data_grid">
             <div class="data_holder">
@@ -489,11 +489,6 @@ p{
             </div>
         </div>
     </div>
-    <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
-  }
-</script>
 
     <script>
         function updateTime() {
@@ -507,4 +502,3 @@ p{
         
 </script>
 </body>
-</html>
