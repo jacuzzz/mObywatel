@@ -4,7 +4,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="mObywatel">
+    <meta name="apple-mobile-web-app-title" content="Moja Apka">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <link rel="icon" type="image/x-icon" href="ikonka.png">
@@ -415,9 +415,9 @@ p{
 		
         </div>
         <div class="id_own_image" style="background-image: url('zdjjj.jpg');"></div>
-        <video muted="muted" playsinline="playsinline" width="19%" height="15.5%" loop class="flag_video" autoplay muted>
-            <source src="flaga1.mp4" type="video/mp4">
-        </video>
+        <div class="flag_video">
+            <img src="flaga.gif" alt="flaga" height="60" width="90">
+        </div>
 	<div style="position: absolute; top: 67%; left: 7.5%; z-index: 100; display: flex; align-items: center;">
     <img src="rzecz123.gif" class="rzecz" style="width: 16%; height: auto;">
     <p style="margin-left: 10px; font-size: 15px; color: #636058; font-family: 'Poppins', sans-serif;">Rzeczpospolita <br>Polska</p>
@@ -504,20 +504,7 @@ p{
         
         setInterval(updateTime, 1000);
         updateTime();
-        document.addEventListener('DOMContentLoaded', () => {
-    const video = document.querySelector('.flag_video');
-    video.muted = true;
-    video.playsInline = true;
-    video.autoplay = true;
-    video.loop = true;
-    video.play().catch(() => {
-
-        document.body.addEventListener('click', () => {
-            video.play();
-        }, { once: true });
-    });
-});
+        
 </script>
 </body>
 </html>
-
