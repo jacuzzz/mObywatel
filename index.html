@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <link rel="icon" type="image/x-icon" href="ikonka.png">
     <title>mObywatel</title>
@@ -12,9 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=0.8, user-scalable=no">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
-* {
-	scrollbar-width: none;
-}
+
 ::-webkit-scrollbar {
     display: none;
 }
@@ -214,7 +210,7 @@ p{
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 75px;
+    height: 65px;
     z-index: 10000;
 }
 
@@ -372,6 +368,26 @@ p{
     </style>
 
 </head>
+<div id="loginScreen" style="
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background-color:#f5f6fb;
+    z-index:99999;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    opacity:1;
+    transition: opacity 0.6s ease;
+">
+    <h2 style="font-family:'Poppins',sans-serif;color:#3b3c41;margin-bottom:20px;">Wprowadź PIN</h2>
+    <input type="password" id="pinInput" placeholder="PIN" style="padding:10px;font-size:18px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;text-align:center;">
+    <button id="loginBtn" style="padding:10px 20px;font-size:16px;border-radius:10px;background-color:#014a93;color:white;border:none;cursor:pointer;">Zaloguj</button>
+    <p id="pinError" style="color:red;margin-top:10px;display:none;">Niepoprawny PIN!</p>
+</div>
 <body>
     <div class="top_grid">
         <div class="action_grid">
@@ -493,8 +509,28 @@ p{
             </div>
         </div>
     </div>
+<script>
+const correctPin = "2968";
+const loginScreen = document.getElementById('loginScreen');
+const pinInput = document.getElementById('pinInput');
+const loginBtn = document.getElementById('loginBtn');
+const pinError = document.getElementById('pinError');
 
-    <script>
+loginBtn.addEventListener('click', () => {
+    if(pinInput.value === correctPin){
+        loginScreen.style.opacity = '0';
+        setTimeout(() => {
+            loginScreen.style.display = 'none';
+        }, 600);
+    } else {
+        pinError.style.display = 'block';
+        pinInput.value = '';
+    }
+});
+
+pinInput.addEventListener('keyup', (e) => {
+    if(e.key === "Enter") loginBtn.click();
+});
         function updateTime() {
             const now = new Date();
             const timeString = 'Czas: '+  now.toLocaleTimeString('pl-PL') + '  ' + now.toLocaleDateString('pl-PL');
@@ -506,8 +542,3 @@ p{
         
 </script>
 </body>
-
-
-
-
-
