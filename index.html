@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Moja Apka">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="icon" type="image/x-icon" href="ikonka.png">
+    <title>mObywatel</title>
+    <link rel="apple-touch-icon" href="ikonka.png">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="shortcut icon" href="ikonka.png">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8, user-scalable=no">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+::-webkit-scrollbar-track {
+    display: none;
+}
+
+::-webkit-scrollbar-thumb {
+    display: none;
+}
+
+/**styling**/
+body{
+    background-color: #f5f6fb;
+}
+
+.back_img{
+    width: 17px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.action_grid{
+    cursor: pointer;
+    margin-left: 10px;
+    display: grid;
+    grid-template-columns: max-content max-content;
+}
+
+.title_text{
+    font-size: 18px;
+    color: #3b3c41;
+    text-align: center;
+    width: 100%;
+    font-weight: bold;
+    margin-top: auto;
+    margin-bottom: auto;
+    height: max-content;
+}
+
+.id_data_grid{
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    display: grid;
+    grid-template-columns: 100%;
+    grid-auto-flow: row;
+    grid-auto-rows: 70px;
+}
+
+.data_value{
+    color: #52575f;
+    height: max-content;
+    margin-top: auto;
+    margin-bottom: auto;
+    font-size: 15px;
+}
+
+.data_holder{
+    width: 100%;
+    height: max-content;
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: max-content max-content;
+}
+
+.flag_video{
+    position: absolute;
+    top: 49.45%;
+    left: 7.5%;
+}
+
+.data_title{
+    font-weight: 600;
+    font-size: 18px;
+    height: max-content;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+p{
+    font-family: "Poppins", sans-serif;
+}
+
+*{
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+}
+
+.id_image_data{
+    position: relative;
+}
+
+.id_image{
+    z-index: -1;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    z-index: -1;
+    pointer-events: none;
+    box-shadow: 0px 0px 5px rgb(224, 224, 224);
+    border-radius: 15px 15px 0px 0px;
+}
+
+.other_grid{
+    margin-top: 10px;
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-rows: max-content;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.bottom_holder{
+    position: relative;
+    width: 100%;
+    height: 80px;
+    background-color: white;
+    box-shadow: 0px 0px 5px rgb(224, 224, 224);
+    border-radius: 15px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.bottom_element_image{
+    pointer-events: none;
+    width: 28px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.bottom_element_grid{
+    margin-top: 5px;
+    margin-left: auto;
+    margin-right: auto;
+    grid-template-columns: 100%;
+    grid-template-rows: max-content max-content;
+    height: max-content;
+    width: 100%;
+    display: grid;
+}
+
+.bottom_element_text{
+    margin-top: 0;
+    font-size: 11px;
+    color: #57585d;
+    font-weight: 400;
+    text-align: center;
+}
+
+.bottom_text{
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 17px;
+}
+
+.bottom_grid{
+    position: relative;
+    display: grid;
+    grid-template-columns: max-content max-content max-content;
+    height: 100%;
+    width: max-content;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 20px;
+    margin-right: auto;
+}
+
+.bottom_bar_grid{
+    display: grid;
+    grid-template-columns: repeat(5, calc(100% / 5));
+    height: 100%;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.bottom_image{
+    pointer-events: none;
+    width: 32px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.bottom_bar{
+    position: fixed;
+    background-color: #f5f6fb;
+    border-top: 0.1px solid rgb(189, 189, 189);
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    z-index: 10000;
+}
+
+.inset{
+    box-shadow: inset 0px 0px 20px white;
+    background-color: transparent;
+    position: absolute;
+    top: 5%;
+    left: 7.5%;
+    width: 35%;
+    border-radius: 15px;
+    height: 42%;
+    z-index: 1000;
+    background-position: center;
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+.id_own_image{
+    filter: grayscale(1);
+    pointer-events: none;
+    box-shadow: 0px 0px 5px white;
+    position: absolute;
+    top: 5%;
+    left: 7.5%;
+    width: 35%;
+    border-radius: 15px;
+    height: 42%;
+    background-color: white;
+    background-position: center;
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+.bottom_update{
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 100%;
+    height: 100%;
+}
+
+.bottom_update_button{
+    color: #014a93;
+    background-color: #dbeaf9;
+    width: 130px;
+    font-size: 14px;
+    font-weight: bold;
+    height: 32px;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-right: 20px;
+    border-radius: 20px;
+    border: none;
+}
+
+.bottom_update_grid{
+    margin-left: 20px;
+    margin-top: auto;
+    margin-bottom: auto;
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: max-content max-content;
+    height: max-content;
+}
+
+.bottom_update_text{
+    height: max-content;
+    margin-top: auto;
+    margin-bottom: auto;
+    color: #52575f;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.bottom_update_value{
+    height: max-content;
+    margin-top: auto;
+    margin-bottom: auto;
+    color: #1f2125;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.action_arrow{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 20px;
+    width: 20px;
+    order: 100;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.id_bottom{
+    box-shadow: 0px 0px 5px rgb(224, 224, 224);
+    border-radius: 0px 0px 15px 15px;
+    background-color: white;
+    height: 80px;
+    z-index: 1;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.back_text{
+    color: #014A93;
+    font-weight: 500;
+    font-size: 18px;
+    height: max-content;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.help_img{
+    width: 30px;
+    margin-right: 10px;
+    margin-left: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+    cursor: pointer;
+}
+
+.top_grid{
+    z-index: 100000000;
+    background-color: #f5f6fb;
+    position: fixed;
+    top: -10px;
+    height: 60px;
+    left: 0;
+    width: 100%;
+    display: grid;
+    margin-top: 10px;
+    grid-template-columns: repeat(3, calc(100% / 3));
+}
+
+.time_text{
+    margin-top: 60px;
+    margin-bottom: 20px;
+    color: #666b72;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+        .current_time{
+            text-align: center;
+            padding: 5px;
+        }
+.container:hover .rzecz {
+  transform: scale(0.1);
+  transition: transform 0.3s ease;
+}
+.rzecz{
+    margin-top: 3%;
+}
+.tekst{
+    margin-top: 7%;
+}
+    </style>
+
+</head>
+<body>
+    <div class="top_grid">
+        <div class="action_grid">
+            <img src="wroc.png" class="back_img">
+            <p class="back_text">Wróć</p>
+        </div>
+        <p class="title_text">mDowód</p>
+        <img src="help.png" class="help_img">
+    </div>
+    <div class="bottom_bar">
+        <div class="bottom_bar_grid">
+            <div class="bottom_element_grid">
+                <img class="bottom_element_image" src="start.png">
+                <p class="bottom_element_text" style="color: #024b97;">Start</p>
+            </div>
+            <div class="bottom_element_grid" style="margin-top: 6px;">
+                <img class="bottom_element_image" src="dok.png">
+                <p class="bottom_element_text">Dokumenty</p>
+            </div>
+            <div class="bottom_element_grid" style="margin-top: 0px;">
+                <img class="bottom_element_image" style="width: 35px;" src="uslugi.png">
+                <p class="bottom_element_text">Usługi</p>
+            </div>
+            <div class="bottom_element_grid" style="margin-top: 5px;">
+                <img class="bottom_element_image" style="width: 30px;" src="kodqr.png">
+                <p class="bottom_element_text">Kod QR</p>
+            </div>
+            <div class="bottom_element_grid" style="margin-top: 6px;">
+                <img class="bottom_element_image" style="width: 30px;" src="wiecej.png">
+                <p class="bottom_element_text">Więcej</p>
+            </div>
+        </div>
+    </div>
+    <p class="time_text"></p>
+    <div class="current_time">
+        <p id="currentTime"></p>
+    </div>
+    <div class="id_image_data">
+        <img draggable="false" class="id_image" src="tlo.png">
+        <div class="inset">
+        </div>
+        <div class="id_own_image" style="background-image: url('zdjj.jpg');"></div>
+        <div class="flag_video">
+            <img src="flaga.gif" alt="flaga" height="70.5%" width="70%">
+        </div>
+	<div style="position: absolute; top: 62%; left: 7.5%; z-index: 100; display: flex; align-items: center;">
+    <img src="rzecz123.gif" class="rzecz" style="width: 16%; height: auto;">
+    <p style="margin-left: 10px; font-size: 16px; color: #636058; font-family: 'Poppins', sans-serif;"><p class="tekst" style="font-size: 16px; color: #636058; font-family: 'Poppins', sans-serif;">Rzeczpospolita <br>Polska</p></p>
+</div>
+        <div class="id_data_grid">
+            <div class="data_holder">
+                <p class="data_title firstname">ALEKSANDER</p>
+                <p class="data_value">Imię (imiona)</p>
+            </div>
+            <div class="data_holder">
+                <p class="data_title surname">WITKOWSKI</p>
+                <p class="data_value">Nazwisko</p>
+            </div>
+            <div class="data_holder">
+                <p class="data_title">POLSKIE</p>
+                <p class="data_value">Obywatelstwo</p>
+            </div>
+            <div class="data_holder">
+                <p class="data_title">15.04.2007</p>
+                <p class="data_value">Data urodzenia</p>
+            </div>
+            <div class="data_holder">
+                <p class="data_title">07241562337</p>
+                <p class="data_value">Numer PESEL</p>
+            </div>
+        </div>
+    </div>
+    <div class="id_bottom">
+        <div class="bottom_grid">
+            <img class="bottom_image" src="wazny.png">
+            <p class="bottom_text" style="color: #317C26; font-size: 17px;">Dokument ważny</p>
+        </div>
+    </div>
+    <div class="other_grid">
+        <div class="bottom_holder">
+            <div class="bottom_grid">
+                <img class="bottom_image" style="width: 35px;" src="dane.png">
+                <p class="bottom_text" style="color: #1f2125;">Potwierdź swoje dane</p>
+            </div>
+            <img class="action_arrow" src="back.png">
+        </div>
+        <div class="bottom_holder">
+            <div class="bottom_grid">
+                <img class="bottom_image" style="width: 35px;" src="danedok.png">
+                <p class="bottom_text" style="color: #1f2125;">Dane dokumentu</p>
+            </div>
+            <img class="action_arrow" src="back.png">
+        </div>
+        <div class="bottom_holder" style="height: 70px;">
+            <div class="bottom_grid">
+                <p class="bottom_text" style="color: #1f2125; margin-left: 0px;">Twoje dodatkowe dane</p>
+            </div>
+            <img class="action_arrow" style="rotate: 90deg;" src="back.png">
+        </div>
+        <div class="bottom_holder" style="height: 90px;">
+            <div class="bottom_update">
+                <div class="bottom_update_grid">
+                    <p class="bottom_update_text" style="margin-left: 0px;">Ostatnia aktualizacja</p>
+                    <p class="bottom_update_value" style="margin-left: 0px;">17.02.2024</p>
+                </div>
+                <button class="bottom_update_button">Aktualizuj</button>
+            </div>
+        </div>
+        <div class="bottom_holder" style="height: 70px; margin-bottom: 120px;">
+            <div class="bottom_grid">
+                <img class="bottom_image" style="width: 33px;" src="trash.png">
+                <p class="bottom_text" style="color: #cd291c;">Usuń dokument</p>
+            </div>
+        </div>
+    </div>
+    <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeString = 'Czas: '+  now.toLocaleTimeString('pl-PL') + '  ' + now.toLocaleDateString('pl-PL');
+            document.getElementById('currentTime').innerText = timeString;
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+</script>
+</body>
+</html>
