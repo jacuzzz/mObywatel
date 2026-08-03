@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>mObywatel 4.0</title>
+
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme-preference");
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = stored || (prefersDark ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {}
+      })();
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        background-color: #f5f6fb;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      body.loaded {
+        opacity: 1;
+      }
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: #fff;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      .dashboard-page {
+        padding-top: 60px;
+      }
+    </style>
+
+    <script src="js/dev-config.js"></script>
+
+    <script>
+      (function () {
+        "use strict";
+
+        // Dev mode check
+        if (window.DEV_CONFIG && window.DEV_CONFIG.DEV_MODE) {
+          console.warn("[Inline Security] 🔧 DEV_MODE - Pomijam sprawdzenia");
+          return;
+        }
+
+        function isMobile() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.ALLOW_DESKTOP) return true;
+          const ua = navigator.userAgent.toLowerCase();
+          return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+            ua
+          );
+        }
+        function isStandalone() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_PWA_CHECK)
+            return true;
+          return (
+            window.navigator.standalone === true ||
+            window.matchMedia("(display-mode: standalone)").matches ||
+            window.matchMedia("(display-mode: fullscreen)").matches
+          );
+        }
+        function hasAuthToken() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_AUTH_CHECK) return;
+
+          try {
+            // Quick check: device must be activated (have refresh token)
+            // Full validation with backend happens in pwa-gate.js
+            const openRequest = indexedDB.open("obywatel_auth", 1);
+            openRequest.onsuccess = function (event) {
+              const db = event.target.result;
+              const tx = db.transaction("auth_state", "readonly");
+              const store = tx.objectStore("auth_state");
+              const getRequest = store.get("auth_state");
+              getRequest.onsuccess = function () {
+                const authState = getRequest.result;
+                // Only check if device is activated (has refresh token)
+                if (!authState || !authState.refreshToken) {
+                  window.location.href = "./index.html";
+                }
+              };
+              getRequest.onerror = function () {
+                window.location.href = "./index.html";
+              };
+            };
+            openRequest.onerror = function () {
+              window.location.href = "./index.html";
+            };
+          } catch (err) {
+            window.location.href = "./index.html";
+          }
+        }
+        if (!isMobile()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Desktop blocked");
+        }
+        if (!isStandalone()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Not standalone");
+        }
+        hasAuthToken();
+      })();
+    </script>
+
+    <link rel="dns-prefetch" href="//butilive.adadad1314asda.workers.dev" />
+    <link
+      rel="preconnect"
+      href="https://butilive.adadad1314asda.workers.dev"
+      crossorigin
+    />
+
+    <link rel="preload" href="css/main.css" as="style" />
+    <link rel="preload" href="css/common.css" as="style" />
+    <link rel="preload" href="css/pages/documents.css" as="style" />
+    <link
+      rel="preload"
+      href="assets/fonts/roboto_500_latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="stylesheet" href="css/main.css" data-n-g />
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/pages/documents.css" />
+    <link rel="stylesheet" href="css/theme.css" />
+
+    <link rel="manifest" href="manifest.json" />
+
+    <script src="js/api-client.js" defer></script>
+    <script src="js/pwa-gate.js" defer></script>
+    <script src="js/performance-boost.js" defer></script>
+
+    <script src="js/theme.js" defer></script>
+    <script src="js/update-checker.js" defer></script>
+    <script src="js/header.js" defer></script>
+    <script src="js/navigation.js" defer></script>
+    <script src="js/pages/documents.js" defer></script>
+    <script src="js/protection.js"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          // Service Worker nie działa z file:// protokołem
+          if (window.location.protocol === "file:") {
+            console.warn(
+              "[SW] Service Worker nie działa z file:// protokołem. Użyj lokalnego serwera HTTP."
+            );
+            return;
+          }
+
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(function (registration) {
+              console.log(
+                "[SW] ✅ Zarejestrowany pomyślnie:",
+                registration.scope
+              );
+
+              // Check for updates
+              registration.update();
+
+              // Listen for updates
+              registration.addEventListener("updatefound", function () {
+                console.log("[SW] Znaleziono aktualizację...");
+                const newWorker = registration.installing;
+                newWorker.addEventListener("statechange", function () {
+                  console.log("[SW] Stan:", newWorker.state);
+                });
+              });
+            })
+            .catch(function (err) {
+              console.error("[SW] ❌ Rejestracja nie powiodła się:", err);
+            });
+
+          // Listen for controller changes
+          navigator.serviceWorker.addEventListener(
+            "controllerchange",
+            function () {
+              console.log("[SW] Kontroler zmieniony, przeładowanie strony...");
+              window.location.reload();
+            }
+          );
+        });
+      } else {
+        console.warn(
+          "[SW] Service Worker nie jest wspierany w tej przeglądarce"
+        );
+      }
+    </script>
+  </head>
+
+  <body class="dashboard-page">
+    <header class="app-header dashboard-header">
+      <div class="header-left">
+        <div id="inicjaly1">
+          <img
+            src="assets/icons/coi_common_ui_ic_mobywatel_logo.svg"
+            alt="mObywatel"
+          />
+        </div>
+        <span id="header-title" class="header-title">Dokumenty</span>
+      </div>
+      <div class="header-right">
+        <div id="dzwonek" aria-label="Powiadomienia" title="Powiadomienia">
+          <svg
+            class="notif-bell"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            role="img"
+            aria-hidden="true"
+          >
+            <path
+              fill="currentColor"
+              d="M12.75,2C12.75,1.586 12.414,1.25 12,1.25C11.586,1.25 11.25,1.586 11.25,2V3.038C7.736,3.412 4.999,6.386 4.999,9.998V12.617C4.999,13.107 4.82,13.58 4.494,13.946L2.962,15.67C1.816,16.959 2.731,18.998 4.457,18.998H11.55L11.559,18.998C11.853,18.997 12.15,18.997 12.444,18.998L12.453,18.998H19.546C21.271,18.998 22.187,16.959 21.041,15.67L19.505,13.942C19.179,13.576 18.999,13.103 18.999,12.613V12.25C18.999,11.836 18.664,11.5 18.249,11.5C17.835,11.5 17.499,11.836 17.499,12.25V12.613C17.499,13.47 17.814,14.298 18.383,14.938L19.92,16.666C20.206,16.989 19.977,17.498 19.546,17.498H12.453L12.45,17.498C12.152,17.497 11.851,17.497 11.553,17.498L11.55,17.498H4.457C4.026,17.498 3.797,16.989 4.083,16.666L5.615,14.943C6.185,14.302 6.499,13.475 6.499,12.617V9.998C6.499,6.961 8.962,4.498 11.999,4.498C12.398,4.498 12.75,4.195 12.75,3.796V2Z"
+            ></path>
+            <path
+              fill="currentColor"
+              d="M9.5,19H8V19.5C8,21.157 9.343,22.5 11,22.5H13C14.657,22.5 16,21.157 16,19.5V19H14.5V19.5C14.5,20.328 13.828,21 13,21H11C10.172,21 9.5,20.328 9.5,19.5V19Z"
+            ></path>
+            <path
+              fill="#cd291c"
+              d="M18,6m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </header>
+    <h2 id="main-title" class="dashboard-section-title dashboard-main-content">
+      Dokumenty
+    </h2>
+    <section id="wybor-p">
+      <div id="cards-container">
+        </div>
+      <div class="dashboard-under-card">
+        <a href="#" id="customize-view-btn" class="customize-view-link"
+          >Dostosuj widok</a
+        >
+      </div>
+    </section>
+    <button
+      class="floating-add-doc-btn"
+      type="button"
+      aria-label="Dodaj dokument"
+      id="add-doc-btn"
+    >
+      <span class="icon-plus" aria-hidden="true">+</span>
+      <span>Dodaj dokument</span>
+    </button>
+
+    <div id="add-doc-overlay" class="overlay" style="display: none">
+      <div class="overlay-backdrop"></div>
+      <div class="overlay-panel">
+        <div class="overlay-handle"></div>
+        <h2 class="overlay-title">Dodaj dokument</h2>
+        <div class="overlay-content">
+          <div class="doc-option">
+            <label class="doc-checkbox">
+              <input type="checkbox" data-doc-id="mdowod" />
+              <span class="checkmark"></span>
+              <span class="doc-label">mDowód</span>
+            </label>
+          </div>
+          <div class="doc-option">
+            <label class="doc-checkbox">
+              <input type="checkbox" data-doc-id="diia" />
+              <span class="checkmark"></span>
+              <span class="doc-label">Diia.pl</span>
+            </label>
+          </div>
+          <div class="doc-option">
+            <label class="doc-checkbox">
+              <input type="checkbox" data-doc-id="legszk" />
+              <span class="checkmark"></span>
+              <span class="doc-label">Legitymacja szkolna</span>
+            </label>
+          </div>
+          <div class="doc-option">
+            <label class="doc-checkbox">
+              <input type="checkbox" data-doc-id="legstu" />
+              <span class="checkmark"></span>
+              <span class="doc-label">Legitymacja studencka</span>
+            </label>
+          </div>
+          <div class="doc-option">
+            <label class="doc-checkbox">
+              <input type="checkbox" data-doc-id="prawojazdy" />
+              <span class="checkmark"></span>
+              <span class="doc-label">Prawo jazdy</span>
+            </label>
+          </div>
+        </div>
+        <button class="overlay-close-btn" id="close-add-overlay">Gotowe</button>
+      </div>
+    </div>
+
+    <div id="customize-overlay" class="overlay" style="display: none">
+      <div class="overlay-backdrop"></div>
+      <div class="overlay-panel">
+        <div class="overlay-handle"></div>
+        <h2 class="overlay-title">Dostosuj widok</h2>
+        <div class="overlay-content">
+          <p class="overlay-hint">
+            Przeciągnij, aby zmienić kolejność dokumentów
+          </p>
+          <div id="sortable-cards" class="sortable-list">
+            </div>
+        </div>
+        <button class="overlay-close-btn" id="close-customize-overlay">
+          Gotowe
+        </button>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="bottom-nav__tab bottom-nav__tab--active">
+        <img src="assets/icons/if006_documents_fill.svg" alt="home.html" />
+        <span class="bottom-nav__active-text">Dokumenty</span>
+      </div>
+      <div
+        class="bottom-nav__tab unfill"
+        onclick="window.location.href='services.html'"
+      >
+        <img src="assets/icons/if002_services.svg" alt="services.html" />
+        <span>Usługi</span>
+      </div>
+      <div
+        class="bottom-nav__tab unfill"
+        onclick="window.location.href='qr.html'"
+      >
+        <img src="assets/icons/if004_scan.svg" alt="qr.html" />
+        <span>Kod QR</span>
+      </div>
+      <div
+        class="bottom-nav__tab unfill"
+        onclick="window.location.href='more.html'"
+      >
+        <img src="assets/icons/if005_more.svg" alt="more.html" />
+        <span>Więcej</span>
+      </div>
+    </div>
+  </body>
+</html>

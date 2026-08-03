@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>mObywatel 4.0</title>
+
+    <!-- Apply theme immediately to prevent flash -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme-preference");
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = stored || (prefersDark ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Critical CSS inline dla szybszego renderowania -->
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        background-color: #f5f6fb;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      body.loaded {
+        opacity: 1;
+      }
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: #fff;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+
+    <!-- Dev Config - MUSI być pierwszy! -->
+    <script src="js/dev-config.js"></script>
+
+    <!-- CRITICAL SECURITY: Auth check BEFORE page loads -->
+    <script>
+      (function () {
+        "use strict";
+
+        // Dev mode check
+        if (window.DEV_CONFIG && window.DEV_CONFIG.DEV_MODE) {
+          console.warn("[Inline Security] 🔧 DEV_MODE - Pomijam sprawdzenia");
+          return;
+        }
+
+        function isMobile() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.ALLOW_DESKTOP) return true;
+          const ua = navigator.userAgent.toLowerCase();
+          return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+            ua
+          );
+        }
+        function isStandalone() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_PWA_CHECK)
+            return true;
+          return (
+            window.navigator.standalone === true ||
+            window.matchMedia("(display-mode: standalone)").matches ||
+            window.matchMedia("(display-mode: fullscreen)").matches
+          );
+        }
+        function hasAuthToken() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_AUTH_CHECK) return;
+
+          try {
+            // Quick check: device must be activated (have refresh token)
+            // Full validation with backend happens in pwa-gate.js
+            const openRequest = indexedDB.open("obywatel_auth", 1);
+            openRequest.onsuccess = function (event) {
+              const db = event.target.result;
+              const tx = db.transaction("auth_state", "readonly");
+              const store = tx.objectStore("auth_state");
+              const getRequest = store.get("auth_state");
+              getRequest.onsuccess = function () {
+                const authState = getRequest.result;
+                // Only check if device is activated (has refresh token)
+                if (!authState || !authState.refreshToken) {
+                  window.location.href = "./index.html";
+                }
+              };
+              getRequest.onerror = function () {
+                window.location.href = "./index.html";
+              };
+            };
+            openRequest.onerror = function () {
+              window.location.href = "./index.html";
+            };
+          } catch (err) {
+            window.location.href = "./index.html";
+          }
+        }
+        if (!isMobile()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Desktop blocked");
+        }
+        if (!isStandalone()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Not standalone");
+        }
+        hasAuthToken();
+      })();
+    </script>
+
+    <!-- Resource hints dla lepszej wydajności -->
+    <link rel="dns-prefetch" href="//butilive.adadad1314asda.workers.dev" />
+    <link
+      rel="preconnect"
+      href="https://butilive.adadad1314asda.workers.dev"
+      crossorigin
+    />
+
+    <!-- Preload krytycznych zasobów -->
+    <link rel="preload" href="css/main.css" as="style" />
+    <link rel="preload" href="css/common.css" as="style" />
+    <link rel="preload" href="css/pages/qr.css" as="style" />
+    <link rel="preload" href="css/overlay-camera.css" as="style" />
+    <link
+      rel="preload"
+      href="assets/orzel/godlo%20back.png"
+      as="image"
+      type="image/png"
+    />
+    <link
+      rel="preload"
+      href="assets/orzel/godlo%20top.png"
+      as="image"
+      type="image/png"
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/roboto_500_latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="manifest" href="manifest.json" />
+
+    <script src="js/api-client.js" defer></script>
+    <script src="js/pwa-gate.js" defer></script>
+    <script src="js/performance-boost.js" defer></script>
+
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/pages/qr.css" />
+    <link rel="stylesheet" href="css/overlay-camera.css" />
+    <link rel="stylesheet" href="css/theme.css" />
+
+    <script src="js/theme.js" defer></script>
+    <script src="js/update-checker.js" defer></script>
+    <script src="js/header.js" defer></script>
+    <script src="js/qrcode.min.js"></script>
+    <script src="js/pages/qr.js" defer></script>
+    <script src="js/protection.js"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          if (window.location.protocol === "file:") {
+            console.warn(
+              "[SW] Service Worker nie działa z file:// protokołem. Użyj lokalnego serwera HTTP."
+            );
+            return;
+          }
+
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(function (registration) {
+              console.log(
+                "[SW] ✅ Zarejestrowany pomyślnie:",
+                registration.scope
+              );
+              registration.update();
+            })
+            .catch(function (err) {
+              console.error("[SW] ❌ Rejestracja nie powiodła się:", err);
+            });
+        });
+      }
+    </script>
+  </head>
+
+  <body class="qr-page">
+    <header class="app-header">
+      <div class="header-left">
+        <div id="inicjaly1">
+          <img
+            src="assets/icons/coi_common_ui_ic_mobywatel_logo.svg"
+            alt="mObywatel"
+          />
+        </div>
+        <span id="header-title" class="header-title" style="font-weight: bold"
+          >Kod QR</span
+        >
+      </div>
+      <div class="header-right"></div>
+    </header>
+    <div class="page-container">
+      <section
+        id="qr-code-container"
+        class="camera-section"
+        style="display: none"
+      >
+        <header class="app-header dowod-header">
+          <div class="header-left">
+            <a
+              href="#"
+              class="back-link"
+              onclick="closeShowQr(); return false;"
+            >
+              <img
+                class="back-icon"
+                src="assets/icons/ab004_arrow_left.svg"
+                alt="Wróć"
+              />
+            </a>
+            <span id="overlay-header-title" class="header-title"
+              >Pokaż kod QR</span
+            >
+          </div>
+          <div class="header-right"></div>
+        </header>
+        <div class="qr-overlay-content">
+          <h1 id="overlay-main-title" class="qr-page-title">Pokaż kod QR</h1>
+          <p class="qr-hint">
+            Poproś osobę, której sprawdzasz dokument,<br />
+            aby zeskanowała lub przepisała ten kod w<br />swojej aplikacji
+            mObywatel.
+          </p>
+          <div class="qr-display-frame">
+            <div class="qr-display">
+              <img id="qr-image" class="qr-image" alt="Kod QR" />
+              <div
+                id="qr-code-number"
+                class="qr-code-number font-numeric"
+              ></div>
+              <div class="qr-timer">
+                <div class="qr-timer-text">
+                  <span class="qr-timer-label">Kod wygaśnie za:</span>
+                  <span id="qr-timer-value" class="qr-timer-value"
+                    >3 min 0 sek</span
+                  >
+                </div>
+                <div class="qr-timer-bar">
+                  <span id="qr-timer-bar-fill" class="qr-timer-bar-fill"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="qr-display-frame">
+            <div class="qr-icons">
+              <img
+                src="assets/icons/flaga_polski_b.webp"
+                alt="Flaga Polski"
+                class="qr-icon"
+              />
+              <div class="qr-icon-wrapper">
+                <div class="base-back"></div>
+                <div class="holo-back"></div>
+                <div class="holo-grain"></div>
+                <div class="godlo-top"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section
+        id="camera-container"
+        class="camera-section"
+        style="display: none"
+      >
+        <header class="app-header dowod-header">
+          <div class="header-left">
+            <a
+              href="#"
+              class="back-link"
+              onclick="closeCamera(); return false;"
+            >
+              <img
+                class="back-icon"
+                src="assets/icons/ab004_arrow_left.svg"
+                alt="Wróć"
+              />
+            </a>
+            <span class="header-title fade-in">Zeskanuj kod QR</span>
+          </div>
+          <img
+            class="help-icon"
+            src="assets/dowod/znakzapytania.svg"
+            alt="Pomoc"
+          />
+        </header>
+        <div class="camera-overlay-content">
+          <p class="camera-hint">Umieść kod QR w ramce, aby go zeskanować.</p>
+          <div class="camera-frame">
+            <div class="camera-viewport">
+              <video
+                id="camera-view"
+                class="camera-video"
+                autoplay
+                playsinline
+              ></video>
+              <img
+                src="assets/icons/ic_scan_qr_frame.svg"
+                alt=""
+                class="qr-frame-overlay qr-frame-light"
+              />
+              <img
+                src="assets/icons/ic_scan_qr_frame_dark.svg"
+                alt=""
+                class="qr-frame-overlay qr-frame-dark"
+              />
+            </div>
+          </div>
+          <button type="button" id="enter-code" class="camera-cta">
+            Wpisz kod
+          </button>
+        </div>
+      </section>
+      <h1 class="page-title">Kod QR</h1>
+      <p class="page-subtitle">Dzięki tej funkcji zalogujesz się do usług w</p>
+      <p class="page-subtitle">internecie i potwierdzisz cyfrowe dokumenty</p>
+      <p class="page-subtitle">- zarówno swoje, jak i drugiej osoby.</p>
+
+      <div id="scan-qr-button" class="card">
+        <div class="card__left">
+          <img
+            src="assets/icons/ai002_confirm_identity.svg"
+            alt="ID"
+            width="30"
+            height="30"
+          />
+          <div class="card__text">
+            <p class="card__title">Zeskanuj kod QR</p>
+            <p class="card__subtitle">Zaloguj się do strony internetowej</p>
+            <p class="card__subtitle">lub potwierdź swój cyfrowy</p>
+            <p class="card__subtitle">dokument.</p>
+          </div>
+        </div>
+        <img
+          src="assets/icons/ic_arrow_forward_Dgray.svg"
+          alt="arrow"
+          width="17"
+          height="17"
+        />
+      </div>
+
+      <div id="show-qr-button" class="card">
+        <div class="card__left">
+          <img
+            src="assets/icons/ai003_check_document.svg"
+            alt="ID"
+            width="30"
+            height="30"
+          />
+          <div class="card__text">
+            <p class="card__title">Pokaż kod QR</p>
+            <p class="card__subtitle">
+              Sprawdź cyfrowy dokument drugiej osoby.
+            </p>
+          </div>
+        </div>
+        <img
+          src="assets/icons/ic_arrow_forward_Dgray.svg"
+          alt="arrow"
+          width="17px"
+          height="17"
+        />
+      </div>
+
+      <div id="podpis_kwalifikowany" class="card">
+        <div class="card__left">
+          <img
+            src="assets/icons/g007_sign_the_document.svg"
+            alt="ID"
+            width="30"
+            height="30"
+          />
+          <div class="card__text">
+            <p class="card__title" style="line-height: 1.5">
+              Zeskanuj kod QR do podpisu<br />kwalifikowanego
+            </p>
+            <p class="card__subtitle">
+              Wybierz, gdy chcesz użyć kodu ze<br />strony dostawcy podpisu.
+            </p>
+          </div>
+        </div>
+        <img
+          src="assets/icons/ic_arrow_forward_Dgray.svg"
+          alt="arrow"
+          width="17"
+          height="17"
+        />
+      </div>
+
+      <div class="bottom-nav">
+        <div
+          class="bottom-nav__tab unfill"
+          onclick="window.location.href='documents.html'"
+        >
+          <img src="assets/icons/if001_documents.svg" alt="home" />
+          <span>Dokumenty</span>
+        </div>
+        <div
+          class="bottom-nav__tab unfill"
+          onclick="window.location.href='services.html'"
+        >
+          <img src="assets/icons/if002_services.svg" alt="services" />
+          <span>Usługi</span>
+        </div>
+        <div class="bottom-nav__tab bottom-nav__tab--active">
+          <img src="assets/icons/if009_scan_fill.svg" alt="qr" />
+          <span class="bottom-nav__active-text">Kod QR</span>
+        </div>
+        <div
+          class="bottom-nav__tab unfill"
+          onclick="window.location.href='more.html'"
+        >
+          <img src="assets/icons/if005_more.svg" alt="more" />
+          <span>Więcej</span>
+        </div>
+      </div>
+    </div>
+    <script src="js/orzel.js"></script>
+  </body>
+</html>

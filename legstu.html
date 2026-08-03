@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#fff" />
+    <title>mObywatel 4.0</title>
+
+    <!-- Apply theme immediately to prevent flash -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme-preference");
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = stored || (prefersDark ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Critical CSS inline dla szybszego renderowania -->
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        background-color: #f5f6fb;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      body.loaded {
+        opacity: 1;
+      }
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: #fff;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+      main {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 16px 20px 0;
+        height: 45vh;
+        border-radius: 12px 12px 0 0;
+      }
+    </style>
+
+    <!-- Dev Config - MUSI być pierwszy! -->
+    <script src="js/dev-config.js"></script>
+
+    <!-- CRITICAL SECURITY: Auth check BEFORE page loads -->
+    <script>
+      (function () {
+        "use strict";
+
+        // Dev mode check
+        if (window.DEV_CONFIG && window.DEV_CONFIG.DEV_MODE) {
+          console.warn("[Inline Security] 🔧 DEV_MODE - Pomijam sprawdzenia");
+          return;
+        }
+
+        function isMobile() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.ALLOW_DESKTOP) return true;
+          const ua = navigator.userAgent.toLowerCase();
+          return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+            ua
+          );
+        }
+        function isStandalone() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_PWA_CHECK)
+            return true;
+          return (
+            window.navigator.standalone === true ||
+            window.matchMedia("(display-mode: standalone)").matches ||
+            window.matchMedia("(display-mode: fullscreen)").matches
+          );
+        }
+        function hasAuthToken() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_AUTH_CHECK) return;
+
+          try {
+            // Quick check: device must be activated (have refresh token)
+            // Full validation with backend happens in pwa-gate.js
+            const openRequest = indexedDB.open("obywatel_auth", 1);
+            openRequest.onsuccess = function (event) {
+              const db = event.target.result;
+              const tx = db.transaction("auth_state", "readonly");
+              const store = tx.objectStore("auth_state");
+              const getRequest = store.get("auth_state");
+              getRequest.onsuccess = function () {
+                const authState = getRequest.result;
+                // Only check if device is activated (has refresh token)
+                if (!authState || !authState.refreshToken) {
+                  window.location.href = "./index.html";
+                }
+              };
+              getRequest.onerror = function () {
+                window.location.href = "./index.html";
+              };
+            };
+            openRequest.onerror = function () {
+              window.location.href = "./index.html";
+            };
+          } catch (err) {
+            window.location.href = "./index.html";
+          }
+        }
+        if (!isMobile()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Desktop blocked");
+        }
+        if (!isStandalone()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Not standalone");
+        }
+        hasAuthToken();
+      })();
+    </script>
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- Resource hints dla lepszej wydajności -->
+    <link rel="dns-prefetch" href="//butilive.adadad1314asda.workers.dev" />
+    <link
+      rel="preconnect"
+      href="https://butilive.adadad1314asda.workers.dev"
+      crossorigin
+    />
+
+    <script src="js/api-client.js" defer></script>
+    <script src="js/pwa-gate.js" defer></script>
+    <script src="js/performance-boost.js" defer></script>
+    <script src="js/update-checker.js" defer></script>
+
+    <link rel="preload" href="css/main.css" as="style" />
+    <link rel="preload" href="css/common.css" as="style" />
+    <link rel="preload" href="css/pages/legstu.css" as="style" />
+    <link
+      rel="preload"
+      href="assets/orzel/godlo%20back.png"
+      as="image"
+      type="image/png"
+    />
+    <link
+      rel="preload"
+      href="assets/orzel/godlo%20top.png"
+      as="image"
+      type="image/png"
+    />
+    <link
+      rel="preload"
+      href="assets/dowod/mid_background_main.webp"
+      as="image"
+      type="image/webp"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/roboto_400_latinext.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/roboto_500_latinext.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/roboto_700_latinext.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/pages/legstu.css" />
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/overlay-camera.css" />
+
+    <script src="js/theme.js" defer></script>
+    <script src="js/header.js" defer></script>
+    <script src="js/pages/legstu.js" defer></script>
+    <script src="js/protection.js"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          if (window.location.protocol === "file:") {
+            console.warn(
+              "[SW] Service Worker nie działa z file:// protokołem. Użyj lokalnego serwera HTTP."
+            );
+            return;
+          }
+
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(function (registration) {
+              console.log(
+                "[SW] ✅ Zarejestrowany pomyślnie:",
+                registration.scope
+              );
+              registration.update();
+            })
+            .catch(function (err) {
+              console.error("[SW] ❌ Rejestracja nie powiodła się:", err);
+            });
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <header class="app-header dowod-header">
+      <div class="header-left">
+        <a href="documents.html" class="back-link">
+          <img
+            class="back-icon"
+            src="assets/icons/ab004_arrow_left.svg"
+            alt="Wróć"
+          />
+        </a>
+        <span class="header-title fade-in">Legitymacja studencka</span>
+      </div>
+    </header>
+
+    <p class="czas" aria-live="polite"></p>
+
+    <main>
+      <section id="lew">
+        <div class="photo-container">
+          <img
+            id="profileImage"
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADbQGgYgkQ7wAAAABJRU5ErkJggg=="
+            class="photo"
+            alt="Zdjęcie profilowe"
+            loading="eager"
+            decoding="async"
+            style="opacity: 0; transition: opacity 0.3s ease-in"
+          />
+          <img
+            class="photo-border"
+            src="assets/dowod/glowing.png"
+            alt=""
+            loading="eager"
+          />
+        </div>
+        <div id="gradient"></div>
+        <img src="assets/dowod/flaga_bez.gif" alt="Flaga" id="flaga" />
+        <div id="rzecz">
+          <div class="wrapper">
+            <div class="base-back"></div>
+            <div class="holo-back"></div>
+            <div class="holo-grain"></div>
+            <div class="godlo-top"></div>
+          </div>
+          <p>Rzeczpospolita<br />Polska</p>
+        </div>
+      </section>
+      <section id="praw">
+        <div class="cwel">
+          <span class="title" id="display-name">Brak danych</span>
+          <span class="description">Imię (Imiona)</span>
+        </div>
+        <div class="cwel">
+          <span class="title" id="display-surname">Brak danych</span>
+          <span class="description">Nazwisko</span>
+        </div>
+        <div class="cwel">
+          <span class="title" id="display-birthDate">Brak danych</span>
+          <span class="description">Data urodzenia</span>
+        </div>
+        <div class="cwel">
+          <span class="title" id="display-pesel">Brak danych</span>
+          <span class="description">Numer PESEL</span>
+        </div>
+        <div class="cwel">
+          <span class="title" id="display-dataWydania">Brak danych</span>
+          <span class="description">Data wydania</span>
+        </div>
+        <div class="cwel">
+          <span class="title" id="display-uczelnia">Brak danych</span>
+          <span class="description">Nazwa uczelni</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Status dokumentu -->
+    <section id="bottom">
+      <svg
+        class="status-checkmark"
+        xmlns="http://www.w3.org/2000/svg"
+        width="22"
+        height="22"
+        viewBox="0 0 34 34"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle
+          cx="17"
+          cy="17"
+          r="16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+        />
+        <g transform="translate(5,5)">
+          <path
+            fill="currentColor"
+            d="m9.24,18.53c-0.19,0 -0.38,-0.07 -0.53,-0.22l-5.43,-5.43c-0.29,-0.29 -0.29,-0.77 0,-1.06s0.77,-0.29 1.06,0l4.9,4.9 10.41,-10.41c0.29,-0.29 0.77,-0.29 1.06,0s0.29,0.77 0,1.06l-10.94,10.94c-0.15,0.15 -0.34,0.22 -0.53,0.22Z"
+          />
+        </g>
+      </svg>
+      <p>Dokument ważny</p>
+    </section>
+
+    <!-- Pasek szybkich akcji (3 kafelki) -->
+    <section class="actions">
+      <div class="quick-actions">
+        <button class="qa-item" type="button">
+          <span class="qa-icon"
+            ><img
+              src="assets/icons/ai002_confirm_identity_mini.svg"
+              alt="Potwierdź swoje dane"
+          /></span>
+          <span class="qa-label">Potwierdź swoje dane</span>
+        </button>
+        <button class="qa-item" type="button">
+          <span class="qa-icon"
+            ><img
+              src="assets/icons/bezpieczny_autobus_leg.svg"
+              alt="Zastrzeż PESEL"
+          /></span>
+          <span class="qa-label">Bezpieczny<br />autobus</span>
+        </button>
+        <button class="qa-item" type="button">
+          <span class="qa-icon"
+            ><img
+              src="assets/icons/ab011_more_vertical.svg"
+              alt="Pozostałe skróty"
+          /></span>
+          <span class="qa-label">Pozostałe skróty</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Dodatkowe dane -->
+    <section class="details-card">
+      <div class="barcode-section">
+        <p class="barcode-label">Numer albumu</p>
+        <p class="barcode-number" id="display-albumNumber">Brak danych</p>
+      </div>
+      <div class="divider"></div>
+      <div class="barcode-section">
+        <p class="barcode-sublabel">Kod kreskowy</p>
+        <svg
+          class="barcode"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 380 110"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <rect x="5" y="0" width="2" height="110" />
+          <rect x="10" y="0" width="5" height="110" />
+          <rect x="18" y="0" width="2" height="110" />
+          <rect x="23" y="0" width="2" height="110" />
+          <rect x="28" y="0" width="5" height="110" />
+          <rect x="36" y="0" width="3" height="110" />
+          <rect x="42" y="0" width="2" height="110" />
+          <rect x="47" y="0" width="5" height="110" />
+          <rect x="55" y="0" width="2" height="110" />
+          <rect x="60" y="0" width="5" height="110" />
+          <rect x="68" y="0" width="2" height="110" />
+          <!-- przerwa -->
+          <rect x="78" y="0" width="2" height="110" />
+          <rect x="83" y="0" width="5" height="110" />
+          <rect x="91" y="0" width="3" height="110" />
+          <rect x="97" y="0" width="2" height="110" />
+          <rect x="102" y="0" width="5" height="110" />
+          <rect x="110" y="0" width="2" height="110" />
+          <rect x="115" y="0" width="3" height="110" />
+          <rect x="121" y="0" width="5" height="110" />
+          <rect x="129" y="0" width="2" height="110" />
+          <rect x="134" y="0" width="2" height="110" />
+          <rect x="139" y="0" width="5" height="110" />
+          <rect x="147" y="0" width="3" height="110" />
+          <rect x="153" y="0" width="2" height="110" />
+          <!-- przerwa -->
+          <rect x="163" y="0" width="5" height="110" />
+          <rect x="171" y="0" width="2" height="110" />
+          <rect x="176" y="0" width="3" height="110" />
+          <rect x="182" y="0" width="5" height="110" />
+          <rect x="190" y="0" width="2" height="110" />
+          <rect x="195" y="0" width="2" height="110" />
+          <rect x="200" y="0" width="5" height="110" />
+          <rect x="208" y="0" width="2" height="110" />
+          <rect x="213" y="0" width="5" height="110" />
+          <rect x="221" y="0" width="3" height="110" />
+          <rect x="227" y="0" width="2" height="110" />
+          <rect x="232" y="0" width="5" height="110" />
+          <rect x="240" y="0" width="2" height="110" />
+          <!-- przerwa -->
+          <rect x="250" y="0" width="3" height="110" />
+          <rect x="256" y="0" width="5" height="110" />
+          <rect x="264" y="0" width="2" height="110" />
+          <rect x="269" y="0" width="2" height="110" />
+          <rect x="274" y="0" width="5" height="110" />
+          <rect x="282" y="0" width="3" height="110" />
+          <rect x="288" y="0" width="2" height="110" />
+          <rect x="293" y="0" width="5" height="110" />
+          <rect x="301" y="0" width="2" height="110" />
+          <rect x="306" y="0" width="3" height="110" />
+          <rect x="312" y="0" width="5" height="110" />
+          <rect x="320" y="0" width="2" height="110" />
+          <rect x="325" y="0" width="3" height="110" />
+          <rect x="331" y="0" width="5" height="110" />
+          <rect x="339" y="0" width="2" height="110" />
+          <rect x="344" y="0" width="2" height="110" />
+          <rect x="349" y="0" width="5" height="110" />
+          <rect x="357" y="0" width="2" height="110" />
+          <rect x="362" y="0" width="3" height="110" />
+          <rect x="368" y="0" width="5" height="110" />
+        </svg>
+      </div>
+    </section>
+
+    <!-- Karta: Ostatnia aktualizacja -->
+    <section>
+      <a
+        class="list-card"
+        style="
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          padding: 40px 20px;
+          border-radius: 10px;
+          background-color: white;
+        "
+      >
+        <div>
+          <p class="info">Ostatnia aktualizacja</p>
+          <p id="sukadziwkakurwa" class="main">--.--.----</p>
+        </div>
+        <button id="aktualizuj">Aktualizuj</button>
+      </a>
+    </section>
+
+    <div
+      id="notification"
+      class="notification"
+      role="status"
+      aria-live="polite"
+    >
+      <span class="notification-text">Dokument został zaktualizowany</span>
+      <button
+        type="button"
+        class="notification-close"
+        aria-label="Zamknij powiadomienie"
+      ></button>
+    </div>
+
+    <p class="disclaimer" style="margin-top: 16px"></p>
+
+    <section id="camera-container" class="camera-section" style="display: none">
+      <header class="app-header dowod-header">
+        <div class="header-left">
+          <a href="#" class="back-link" onclick="closeCamera(); return false;">
+            <img
+              class="back-icon"
+              src="assets/icons/ab004_arrow_left.svg"
+              alt="Wróć"
+            />
+          </a>
+          <span class="header-title fade-in">Zeskanuj kod QR</span>
+        </div>
+        <img
+          class="help-icon"
+          src="assets/dowod/znakzapytania.svg"
+          alt="Pomoc"
+        />
+      </header>
+      <div class="camera-overlay-content">
+        <p class="camera-hint">Umieść kod QR w ramce, aby go zeskanować.</p>
+        <div class="camera-frame">
+          <div class="camera-viewport">
+            <video
+              id="camera-view"
+              class="camera-video"
+              autoplay
+              playsinline
+            ></video>
+            <img
+              src="assets/icons/ic_scan_qr_frame.svg"
+              alt=""
+              class="qr-frame-overlay qr-frame-light"
+            />
+            <img
+              src="assets/icons/ic_scan_qr_frame_dark.svg"
+              alt=""
+              class="qr-frame-overlay qr-frame-dark"
+            />
+          </div>
+        </div>
+        <button type="button" id="enter-code" class="camera-cta">
+          Wpisz kod
+        </button>
+      </div>
+    </section>
+
+    <!-- Overlay: Pozostałe skróty -->
+    <section
+      id="more-shortcuts-overlay"
+      class="camera-section"
+      style="display: none"
+    >
+      <header class="app-header dowod-header">
+        <div class="header-left">
+          <a
+            href="#"
+            class="back-link"
+            onclick="closeMoreShortcutsOverlay(); return false;"
+          >
+            <img
+              class="back-icon"
+              src="assets/icons/ab009_x_mark.svg"
+              alt="Wróć"
+            />
+          </a>
+          <span class="header-title fade-in">Pozostałe skróty</span>
+        </div>
+      </header>
+      <div class="camera-overlay-content">
+        <section>
+          <div class="card-list">
+            <div class="card" id="delete-doc" role="button" tabindex="0">
+              <img
+                src="assets/icons/aa002_delete.svg"
+                alt="Usuń dokument"
+                width="24"
+                height="24"
+                style="margin-right: 10px"
+              />
+              <span style="font-weight: 500; color: red">Usuń dokument</span>
+              <img
+                src="assets/icons/ic_arrow_forward_gray.svg"
+                alt="arrow"
+                width="24"
+                height="24"
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Sekcja informacyjna na dole -->
+    <section
+      style="
+        margin: 20px;
+        padding: 16px;
+        background: var(--blue-active-bg);
+        border-radius: 10px;
+      "
+    >
+      <div style="display: flex; gap: 12px">
+        <svg
+          style="
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            color: var(--blue-active);
+          "
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+          <text
+            x="12"
+            y="16"
+            text-anchor="middle"
+            font-size="14"
+            font-weight="bold"
+            fill="currentColor"
+          >
+            i
+          </text>
+        </svg>
+        <div>
+          <p style="font-weight: 500; margin: 0 0 8px 0; color: var(--text)">
+            Informacja
+          </p>
+          <p
+            style="
+              font-size: 0.8em;
+              color: var(--text);
+              margin: 0;
+              line-height: 1.5;
+            "
+          >
+            Poświadcza uprawnienia do 50% ulgi przy przejazdach środkami
+            komunikacji miejskiej, a także uprawnienia do korzystania - do
+            ukończenia 26. roku życia z ulgowych przejazdów środkami publicznego
+            transportu zbiorowego autobusowego i kolejowego na podstawie
+            odrębnych przepisów.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <script src="js/orzel.js"></script>
+  </body>
+</html>

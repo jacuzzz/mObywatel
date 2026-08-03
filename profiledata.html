@@ -1,0 +1,2461 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Edycja danych dowodu</title>
+
+    <script>
+      (function () {
+        try {
+          // Wymuszamy ciemny motyw w atrybucie
+          document.documentElement.setAttribute("data-theme", "dark");
+        } catch (e) {}
+      })();
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        /* ZMIANA: Ciemne tło i jasny tekst */
+        background-color: #121212;
+        color: #e0e0e0;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      body.loaded {
+        opacity: 1;
+      }
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        /* ZMIANA: Ciemny nagłówek */
+        background: #1e1e1e;
+        border-bottom: 1px solid #333;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+      .header-title {
+        /* ZMIANA: Jasny tekst nagłówka */
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 18px;
+        margin-left: 10px;
+      }
+      /* ZMIANA: Inwersja ikony powrotu (żeby czarna strzałka stała się biała) */
+      .back-icon {
+        filter: invert(1);
+        width: 24px;
+        height: 24px;
+      }
+      /* Ukryj scrollbar w zakładkach */
+      .tabs-container::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* ZMIANA: Style dla inputów w trybie ciemnym */
+      input[type="text"],
+      input[type="date"],
+      input[type="file"],
+      select {
+        background-color: #2c2c2c !important;
+        color: #ffffff !important;
+        border: 1px solid #444 !important;
+        padding: 10px;
+        border-radius: 8px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 5px;
+        font-size: 16px;
+      }
+      
+      input:focus, select:focus {
+        outline: none;
+        border-color: #667eea !important;
+      }
+
+      /* ZMIANA: Style etykiet formularza */
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        font-size: 14px;
+        color: #b0b0b0;
+        margin-bottom: 4px;
+        display: block;
+      }
+      h2 {
+        color: #fff;
+        font-size: 20px;
+        margin-top: 24px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 8px;
+      }
+      
+      /* Style przycisków pomocniczych */
+      .back-button {
+        color: #aaa;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        background: #2c2c2c;
+      }
+      .save-button {
+        padding: 10px 24px;
+        background: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+    </style>
+
+    <script src="js/dev-config.js"></script>
+
+    <script>
+      (function () {
+        "use strict";
+
+        // Dev mode check
+        if (window.DEV_CONFIG && window.DEV_CONFIG.DEV_MODE) {
+          console.warn("[Inline Security] ⚠️ DEV_MODE - Pomijam sprawdzenia");
+          return;
+        }
+
+        function isMobile() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.ALLOW_DESKTOP) return true;
+          const ua = navigator.userAgent.toLowerCase();
+          return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+            ua
+          );
+        }
+        function isStandalone() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_PWA_CHECK)
+            return true;
+          return (
+            window.navigator.standalone === true ||
+            window.matchMedia("(display-mode: standalone)").matches ||
+            window.matchMedia("(display-mode: fullscreen)").matches
+          );
+        }
+        function hasAuthToken() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_AUTH_CHECK) return;
+
+          try {
+            // Quick check: device must be activated (have refresh token)
+            // Full validation with backend happens in pwa-gate.js
+            const openRequest = indexedDB.open("obywatel_auth", 1);
+            openRequest.onsuccess = function (event) {
+              const db = event.target.result;
+              const tx = db.transaction("auth_state", "readonly");
+              const store = tx.objectStore("auth_state");
+              const getRequest = store.get("auth_state");
+              getRequest.onsuccess = function () {
+                const authState = getRequest.result;
+                // Only check if device is activated (has refresh token)
+                if (!authState || !authState.refreshToken) {
+                  window.location.href = "./index.html";
+                }
+              };
+              getRequest.onerror = function () {
+                window.location.href = "./index.html";
+              };
+            };
+            openRequest.onerror = function () {
+              window.location.href = "./index.html";
+            };
+          } catch (err) {
+            window.location.href = "./index.html";
+          }
+        }
+        if (!isMobile()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Desktop blocked");
+        }
+        if (!isStandalone()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Not standalone");
+        }
+        hasAuthToken();
+      })();
+    </script>
+
+    <link rel="dns-prefetch" href="//butilive.adadad1314asda.workers.dev" />
+    <link
+      rel="preconnect"
+      href="https://butilive.adadad1314asda.workers.dev"
+      crossorigin
+    />
+
+    <link rel="preload" href="css/main.css" as="style" />
+    <link rel="preload" href="css/common.css" as="style" />
+    <link rel="preload" href="css/pages/profiledata.css" as="style" />
+    <link
+      rel="preload"
+      href="assets/fonts/roboto_400_latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="manifest" href="manifest.json" />
+
+    <script src="js/api-client.js" defer></script>
+    <script src="js/pwa-gate.js" defer></script>
+    <script src="js/performance-boost.js" defer></script>
+
+    <script src="js/theme.js" defer></script>
+    <script src="js/update-checker.js" defer></script>
+    <script src="js/header.js" defer></script>
+    <script src="js/pages/profiledata.js" defer></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          if (window.location.protocol === "file:") {
+            console.warn(
+              "[SW] Service Worker nie działa z file:// protokołem. Użyj lokalnego serwera HTTP."
+            );
+            return;
+          }
+
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(function (registration) {
+              console.log(
+                "[SW] ✅ Zarejestrowany pomyślnie:",
+                registration.scope
+              );
+              registration.update();
+            })
+            .catch(function (err) {
+              console.error("[SW] ❌ Rejestracja nie powiodła się:", err);
+            });
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <header class="app-header dowod-header">
+      <div class="header-left">
+        <a href="documents.html" class="back-link">
+          <img
+            class="back-icon"
+            src="assets/icons/ab004_arrow_left.svg"
+            alt="Wróć"
+          />
+        </a>
+        <span class="header-title fade-in">Edycja danych</span>
+      </div>
+    </header>
+
+    <div class="container" style="margin-top: 80px; padding: 0 16px;">
+      <div class="photo-container" style="margin: 16px 0; text-align: center;">
+        <img
+          id="profileImage"
+          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+          alt="Zdjęcie profilowe"
+          loading="eager"
+          decoding="async"
+          style="opacity: 0; transition: opacity 0.3s ease-in; width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #444;"
+        />
+        <div style="margin-top: 10px;">
+           <input type="file" id="imageInput" accept="image/*" style="width: auto; background: transparent !important; border: none !important;"/>
+        </div>
+      </div>
+
+      <div
+        class="tabs-container"
+        style="
+          display: flex;
+          gap: 0;
+          border-bottom: 2px solid #333;
+          margin: 16px 0;
+          overflow-x: auto;
+          overflow-y: hidden;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        "
+      >
+        <button
+          class="tab-button tab-active"
+          id="mdowod-tab"
+          onclick="switchTab('mdowod')"
+          style="
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-weight: 500;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+          "
+        >
+          mDowód
+        </button>
+        <button
+          class="tab-button"
+          id="diia-tab"
+          onclick="switchTab('diia')"
+          style="
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-weight: 400;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+          "
+        >
+          DIIA.pl
+        </button>
+        <button
+          class="tab-button"
+          id="legszk-tab"
+          onclick="switchTab('legszk')"
+          style="
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-weight: 400;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+          "
+        >
+          Leg. szkolna
+        </button>
+        <button
+          class="tab-button"
+          id="legstu-tab"
+          onclick="switchTab('legstu')"
+          style="
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-weight: 400;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+          "
+        >
+          Leg. studencka
+        </button>
+        <button
+          class="tab-button"
+          id="prawojazdy-tab"
+          onclick="switchTab('prawojazdy')"
+          style="
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-weight: 400;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+          "
+        >
+          Prawo jazdy
+        </button>
+      </div>
+
+      <div id="mdowod-content">
+        <div style="margin: 16px 0; text-align: center">
+          <button
+            type="button"
+            onclick="generateAllData()"
+            style="
+              padding: 12px 24px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: bold;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+              transition: transform 0.2s;
+            "
+            onmouseover="this.style.transform='scale(1.05)'"
+            onmouseout="this.style.transform='scale(1)'"
+          >
+            ✨ Wygeneruj wszystkie dane
+          </button>
+        </div>
+
+        <form id="passport-form">
+          <div class="form-group">
+            <label for="name">Imię (Imiona):</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              placeholder="JAN"
+              required
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="surname">Nazwisko:</label>
+            <input
+              type="text"
+              id="surname"
+              name="surname"
+              placeholder="NOWAK"
+              required
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="nationality">Obywatelstwo:</label>
+            <input
+              type="text"
+              id="nationality"
+              name="nationality"
+              placeholder="POLSKIE"
+              required
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="birthDate">Data urodzenia:</label>
+            <input type="date" id="birthDate" name="birthDate" required />
+          </div>
+          <div class="form-group">
+            <label for="pesel">PESEL:</label>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <input
+                type="text"
+                id="pesel"
+                name="pesel"
+                placeholder="00000000000"
+                required
+                oninput="convertToUpperCase(this)"
+                style="flex: 1"
+              />
+              <button
+                type="button"
+                onclick="generatePesel()"
+                style="
+                  white-space: nowrap;
+                  padding: 8px 12px;
+                  background: #667eea;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  height: 44px;
+                  margin-top: 5px;
+                "
+              >
+                🎲 Generuj
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <h2>Dane mDowodu</h2>
+          </div>
+          <div class="form-group">
+            <label for="idSeries">Seria i numer:</label>
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                margin-bottom: 12px;
+              "
+            >
+              <input
+                type="text"
+                id="idSeries"
+                name="idSeries"
+                placeholder="XXXX00000"
+                oninput="convertToUpperCase(this)"
+                style="flex: 1"
+              />
+              <button
+                type="button"
+                onclick="generateMDowodNumber()"
+                style="
+                  white-space: nowrap;
+                  padding: 8px 12px;
+                  background: #667eea;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  height: 44px;
+                  margin-top: 5px;
+                "
+              >
+                🎲 Generuj
+              </button>
+            </div>
+            <label for="expiryDate">Termin ważności:</label>
+            <input type="date" id="expiryDate" name="expiryDate" />
+          </div>
+          <div class="form-group">
+            <label for="issueDate">Data wydania:</label>
+            <input type="date" id="issueDate" name="issueDate" />
+          </div>
+          <div class="form-group">
+            <h2>Dane dowodu osobistego</h2>
+          </div>
+          <div class="form-group">
+            <label for="idSeries_do">Seria i numer:</label>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <input
+                type="text"
+                id="idSeries_do"
+                name="idSeries_do"
+                placeholder="AAA000000"
+                oninput="convertToUpperCase(this)"
+                style="flex: 1"
+              />
+              <button
+                type="button"
+                onclick="generateDowodNumber()"
+                style="
+                  white-space: nowrap;
+                  padding: 8px 12px;
+                  background: #667eea;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  height: 44px;
+                  margin-top: 5px;
+                "
+              >
+                🎲 Generuj
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="issuingAuthority_do">Organ wydający:</label>
+            <input
+              type="text"
+              id="issuingAuthority_do"
+              name="issuingAuthority_do"
+              placeholder="np. PREZYDENT MIASTA WARSZAWY"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="expiryDate_do">Termin ważności:</label>
+            <input type="date" id="expiryDate_do" name="expiryDate_do" />
+          </div>
+          <div class="form-group">
+            <label for="issueDate_do">Data wydania:</label>
+            <input type="date" id="issueDate_do" name="issueDate_do" />
+          </div>
+
+          <div class="form-group">
+            <label for="fathername">Imię ojca:</label>
+            <input
+              type="text"
+              id="fathername"
+              name="fathername"
+              placeholder="JAN"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="mothername">Imię matki:</label>
+            <input
+              type="text"
+              id="mothername"
+              name="mothername"
+              placeholder="ANNA"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <h2>Twoje dodatkowe dane</h2>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Nazwisko rodowe:</label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              placeholder="NOWAK"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="gender">Płeć:</label>
+            <select id="gender" name="gender">
+              <option value="">-- Wybierz płeć --</option>
+              <option value="MĘŻCZYZNA">MĘŻCZYZNA</option>
+              <option value="KOBIETA">KOBIETA</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="fatherSurname">Nazwisko rodowe ojca:</label>
+            <input
+              type="text"
+              id="fatherSurname"
+              name="fatherSurname"
+              placeholder="NOWAK"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="motherSurname">Nazwisko rodowe matki:</label>
+            <input
+              type="text"
+              id="motherSurname"
+              name="motherSurname"
+              placeholder="NOWAK"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="placeOfBirth">Miejsce urodzenia:</label>
+            <input
+              type="text"
+              id="placeOfBirth"
+              name="placeOfBirth"
+              placeholder="WARSZAWA"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+          <div class="form-group" id="zameldowanie">
+            <label>Adres zameldowania na pobyt stały:</label>
+            <div class="address-row" style="display: flex; gap: 10px;">
+              <div class="address-col" style="flex: 2;">
+                <label for="address" style="font-size: 12px;">Adres</label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  placeholder="UL. PRZYKŁADOWA 00/00"
+                  oninput="convertToUpperCase(this)"
+                />
+              </div>
+              <div class="address-col" style="flex: 1;">
+                <label for="postalcode" style="font-size: 12px;">Kod</label>
+                <input
+                  type="text"
+                  id="postalcode"
+                  name="postalcode"
+                  placeholder="00-000"
+                  oninput="convertToUpperCase(this)"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="registrationDate"
+              >Data zameldowania na pobyt stały:</label
+            >
+            <input type="date" id="registrationDate" name="registrationDate" />
+          </div>
+
+          <div
+            class="buttons"
+            style="
+              display: flex;
+              gap: 12px;
+              justify-content: center;
+              margin-top: 30px;
+              margin-bottom: 40px;
+            "
+          >
+            <button type="button" class="save-button" onclick="saveData()">
+              💾 Zapisz dane
+            </button>
+            <a href="more.html" class="back-button">⬅️ Powrót </a>
+          </div>
+        </form>
+      </div>
+
+      <div id="diia-content" style="display: none">
+        <div style="margin: 16px 0; text-align: center">
+          <button
+            type="button"
+            onclick="generateAllDataDiia()"
+            style="
+              padding: 12px 24px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: bold;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+              transition: transform 0.2s;
+            "
+            onmouseover="this.style.transform='scale(1.05)'"
+            onmouseout="this.style.transform='scale(1)'"
+          >
+            ✨ Wygeneruj wszystkie dane
+          </button>
+        </div>
+
+        <form id="diia-form">
+          <div class="form-group">
+            <h2>Dane DIIA.pl</h2>
+          </div>
+
+          <div class="form-group">
+            <label for="name_diia">Imię (Imiona):</label>
+            <input
+              type="text"
+              id="name_diia"
+              name="name_diia"
+              placeholder="??????"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="surname_diia">Nazwisko:</label>
+            <input
+              type="text"
+              id="surname_diia"
+              name="surname_diia"
+              placeholder="????????"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="birthDate_diia">Data urodzenia:</label>
+            <input type="date" id="birthDate_diia" name="birthDate_diia" />
+          </div>
+
+          <div class="form-group">
+            <label for="gender_diia">Płeć (do generowania):</label>
+            <select id="gender_diia" name="gender_diia">
+              <option value="">-- Wybierz płeć --</option>
+              <option value="MĘŻCZYZNA">MĘŻCZYZNA</option>
+              <option value="KOBIETA">KOBIETA</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="pesel_diia">PESEL:</label>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <input
+                type="text"
+                id="pesel_diia"
+                name="pesel_diia"
+                placeholder="00000000000"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                style="flex: 1;"
+              />
+              <button
+                type="button"
+                onclick="generatePeselDiia()"
+                style="
+                  padding: 8px 12px;
+                  background: #667eea;
+                  color: white;
+                  border: none;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  font-weight: 500;
+                  white-space: nowrap;
+                  transition: background 0.2s;
+                  height: 44px;
+                  margin-top: 5px;
+                "
+                title="Generuj PESEL na podstawie daty urodzenia"
+              >
+                🎲 Generuj
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="placeOfBirth_diia">Miejsce urodzenia:</label>
+            <input
+              type="text"
+              id="placeOfBirth_diia"
+              name="placeOfBirth_diia"
+              placeholder="KIJÓW"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="countryOfOrigin_diia">Kraj pochodzenia:</label>
+            <input
+              type="text"
+              id="countryOfOrigin_diia"
+              name="countryOfOrigin_diia"
+              placeholder="UKRAINA"
+              value="UKRAINA"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="nationality_diia">Obywatelstwo:</label>
+            <input
+              type="text"
+              id="nationality_diia"
+              name="nationality_diia"
+              placeholder="UKRAIŃSKIE"
+              value="UKRAIŃSKIE"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div
+            class="buttons"
+            style="
+              display: flex;
+              gap: 12px;
+              justify-content: center;
+              margin-top: 30px;
+              margin-bottom: 40px;
+            "
+          >
+            <button type="button" class="save-button" onclick="saveData()">
+              💾 Zapisz dane
+            </button>
+            <a href="more.html" class="back-button">⬅️ Powrót </a>
+          </div>
+        </form>
+      </div>
+
+      <div id="legszk-content" style="display: none">
+        <div style="margin: 16px 0; text-align: center">
+          <button
+            type="button"
+            onclick="generateAllDataLegszk()"
+            style="
+              padding: 12px 24px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: bold;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+              transition: transform 0.2s;
+            "
+            onmouseover="this.style.transform='scale(1.05)'"
+            onmouseout="this.style.transform='scale(1)'"
+          >
+            ✨ Wygeneruj wszystkie dane
+          </button>
+        </div>
+
+        <form id="legszk-form">
+          <div class="form-group">
+            <h2>Dane Legitymacji szkolnej</h2>
+          </div>
+
+          <div class="form-group">
+            <label for="display-name_legszk">Imię (Imiona):</label>
+            <input
+              type="text"
+              id="display-name_legszk"
+              data-target="display-name"
+              placeholder="JAN"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-surname_legszk">Nazwisko:</label>
+            <input
+              type="text"
+              id="display-surname_legszk"
+              data-target="display-surname"
+              placeholder="NOWAK"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-birthDate_legszk">Data urodzenia:</label>
+            <input
+              type="date"
+              id="display-birthDate_legszk"
+              data-target="display-birthDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="gender_legszk">Płeć (do generowania):</label>
+            <select id="gender_legszk" name="gender_legszk">
+              <option value="">-- Wybierz płeć --</option>
+              <option value="MĘŻCZYZNA">MĘŻCZYZNA</option>
+              <option value="KOBIETA">KOBIETA</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="display-pesel_legszk">PESEL:</label>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <input
+                type="text"
+                id="display-pesel_legszk"
+                data-target="display-pesel"
+                placeholder="00000000000"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                style="flex: 1;"
+              />
+              <button
+                type="button"
+                onclick="generatePeselLegszk()"
+                style="
+                  padding: 8px 12px;
+                  background: #667eea;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  white-space: nowrap;
+                  height: 44px;
+                  margin-top: 5px;
+                "
+              >
+                🎲 Generuj
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="display-cardNumber_legszk">Numer legitymacji:</label>
+            <input
+              type="text"
+              id="display-cardNumber_legszk"
+              data-target="display-cardNumber"
+              placeholder="1234/56"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-issueDate_legszk">Data wydania:</label>
+            <input
+              type="date"
+              id="display-issueDate_legszk"
+              data-target="display-issueDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-expiryDate_legszk">Data ważności:</label>
+            <input
+              type="date"
+              id="display-expiryDate_legszk"
+              data-target="display-expiryDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-schoolName_legszk">Nazwa szkoły:</label>
+            <input
+              type="text"
+              id="display-schoolName_legszk"
+              data-target="display-schoolName"
+              placeholder="SZKOŁA PODSTAWOWA NR 1 IM. JANA III SOBIESKIEGO"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-schoolAddress_legszk">Adres szkoły:</label>
+            <input
+              type="text"
+              id="display-schoolAddress_legszk"
+              data-target="display-schoolAddress"
+              placeholder="UL. SZKOLNA 1, 00-001 WARSZAWA"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-schoolPhone_legszk">Telefon szkoły:</label>
+            <input
+              type="text"
+              id="display-schoolPhone_legszk"
+              data-target="display-schoolPhone"
+              placeholder="22 123 45 67"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-schoolDirector_legszk">Dyrektor szkoły:</label>
+            <input
+              type="text"
+              id="display-schoolDirector_legszk"
+              data-target="display-schoolDirector"
+              placeholder="ANNA KOWALSKA"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div
+            class="buttons"
+            style="
+              display: flex;
+              gap: 12px;
+              justify-content: center;
+              margin-top: 30px;
+              margin-bottom: 40px;
+            "
+          >
+            <button type="button" class="save-button" onclick="saveData()">
+              💾 Zapisz dane
+            </button>
+            <a href="more.html" class="back-button">⬅️ Powrót </a>
+          </div>
+        </form>
+      </div>
+
+      <div id="legstu-content" style="display: none">
+        <div style="margin: 16px 0; text-align: center">
+          <button
+            type="button"
+            onclick="generateAllDataLegstu()"
+            style="
+              padding: 12px 24px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: bold;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+              transition: transform 0.2s;
+            "
+            onmouseover="this.style.transform='scale(1.05)'"
+            onmouseout="this.style.transform='scale(1)'"
+          >
+            ✨ Wygeneruj wszystkie dane
+          </button>
+        </div>
+
+        <form id="legstu-form">
+          <div class="form-group">
+            <h2>Dane Legitymacji studenckiej</h2>
+          </div>
+
+          <div class="form-group">
+            <label for="display-name_legstu">Imię (Imiona):</label>
+            <input
+              type="text"
+              id="display-name_legstu"
+              data-target="display-name"
+              placeholder="JAN"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-surname_legstu">Nazwisko:</label>
+            <input
+              type="text"
+              id="display-surname_legstu"
+              data-target="display-surname"
+              placeholder="NOWAK"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-birthDate_legstu">Data urodzenia:</label>
+            <input
+              type="date"
+              id="display-birthDate_legstu"
+              data-target="display-birthDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="gender_legstu">Płeć (do generowania):</label>
+            <select id="gender_legstu" name="gender_legstu">
+              <option value="">-- Wybierz płeć --</option>
+              <option value="MĘŻCZYZNA">MĘŻCZYZNA</option>
+              <option value="KOBIETA">KOBIETA</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="display-pesel_legstu">PESEL:</label>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <input
+                type="text"
+                id="display-pesel_legstu"
+                data-target="display-pesel"
+                placeholder="00000000000"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                style="flex: 1;"
+              />
+              <button
+                type="button"
+                onclick="generatePeselLegstu()"
+                style="
+                  padding: 8px 12px;
+                  background: #667eea;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  white-space: nowrap;
+                  height: 44px;
+                  margin-top: 5px;
+                "
+              >
+                🎲 Generuj
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="display-dataWydania_legstu">Data wydania:</label>
+            <input
+              type="date"
+              id="display-dataWydania_legstu"
+              data-target="display-dataWydania"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-uczelnia_legstu">Nazwa uczelni:</label>
+            <input
+              type="text"
+              id="display-uczelnia_legstu"
+              data-target="display-uczelnia"
+              placeholder="UNIWERSYTET WARSZAWSKI"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-albumNumber_legstu">Numer albumu:</label>
+            <input
+              type="text"
+              id="display-albumNumber_legstu"
+              data-target="display-albumNumber"
+              placeholder="123456"
+              oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+            />
+          </div>
+
+          <div
+            class="buttons"
+            style="
+              display: flex;
+              gap: 12px;
+              justify-content: center;
+              margin-top: 30px;
+              margin-bottom: 40px;
+            "
+          >
+            <button type="button" class="save-button" onclick="saveData()">
+              💾 Zapisz dane
+            </button>
+            <a href="more.html" class="back-button">⬅️ Powrót </a>
+          </div>
+        </form>
+      </div>
+
+      <div id="prawojazdy-content" style="display: none">
+        <div style="margin: 16px 0; text-align: center">
+          <button
+            type="button"
+            onclick="generateAllDataPrawojazdy()"
+            style="
+              padding: 12px 24px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: bold;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+              transition: transform 0.2s;
+            "
+            onmouseover="this.style.transform='scale(1.05)'"
+            onmouseout="this.style.transform='scale(1)'"
+          >
+            ✨ Wygeneruj wszystkie dane
+          </button>
+        </div>
+
+        <form id="prawojazdy-form">
+          <div class="form-group">
+            <h2>Dane Prawa jazdy</h2>
+          </div>
+
+          <div class="form-group">
+            <label for="display-name_prawojazdy">Imię (Imiona):</label>
+            <input
+              type="text"
+              id="display-name_prawojazdy"
+              data-target="display-name"
+              placeholder="JAN"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-surname_prawojazdy">Nazwisko:</label>
+            <input
+              type="text"
+              id="display-surname_prawojazdy"
+              data-target="display-surname"
+              placeholder="NOWAK"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-birthDate_prawojazdy">Data urodzenia:</label>
+            <input
+              type="date"
+              id="display-birthDate_prawojazdy"
+              data-target="display-birthDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-birthPlace_prawojazdy"
+              >Miejsce urodzenia:</label
+            >
+            <input
+              type="text"
+              id="display-birthPlace_prawojazdy"
+              data-target="display-birthPlace"
+              placeholder="WARSZAWA"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="gender_prawojazdy">Płeć (do generowania):</label>
+            <select id="gender_prawojazdy" name="gender_prawojazdy">
+              <option value="">-- Wybierz płeć --</option>
+              <option value="MĘŻCZYZNA">MĘŻCZYZNA</option>
+              <option value="KOBIETA">KOBIETA</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="display-pesel_prawojazdy">PESEL:</label>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <input
+                type="text"
+                id="display-pesel_prawojazdy"
+                data-target="display-pesel"
+                placeholder="00000000000"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
+                style="flex: 1;"
+              />
+              <button
+                type="button"
+                onclick="generatePeselPrawojazdy()"
+                style="
+                  padding: 8px 12px;
+                  background: #667eea;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  white-space: nowrap;
+                  height: 44px;
+                  margin-top: 5px;
+                "
+              >
+                🎲 Generuj
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="display-issueDate_prawojazdy">Data wydania:</label>
+            <input
+              type="date"
+              id="display-issueDate_prawojazdy"
+              data-target="display-issueDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-documentNumber_prawojazdy"
+              >Numer dokumentu:</label
+            >
+            <input
+              type="text"
+              id="display-documentNumber_prawojazdy"
+              data-target="display-documentNumber"
+              placeholder="12345/67/8901"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-blanketNumber_prawojazdy"
+              >Numer blankietu:</label
+            >
+            <input
+              type="text"
+              id="display-blanketNumber_prawojazdy"
+              data-target="display-blanketNumber"
+              placeholder="A12345678"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="display-issuingAuthority_prawojazdy"
+              >Organ wydający:</label
+            >
+            <input
+              type="text"
+              id="display-issuingAuthority_prawojazdy"
+              data-target="display-issuingAuthority"
+              placeholder="STAROSTWO POWIATOWE W LUBLINIE"
+              oninput="convertToUpperCase(this)"
+            />
+          </div>
+
+          <div
+            class="buttons"
+            style="
+              display: flex;
+              gap: 12px;
+              justify-content: center;
+              margin-top: 30px;
+              margin-bottom: 40px;
+            "
+          >
+            <button type="button" class="save-button" onclick="saveData()">
+              💾 Zapisz dane
+            </button>
+            <a href="more.html" class="back-button">⬅️ Powrót </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Funkcja zapisu danych do localStorage
+      function saveData() {
+        try {
+          var get = function (id) {
+            var el = document.getElementById(id);
+            return el ? el.value : "";
+          };
+          var put = function (key, val) {
+            var s = String(val || "").trim();
+            try {
+              if (s) localStorage.setItem(key, s);
+              else localStorage.removeItem(key);
+            } catch (_) {}
+          };
+
+          put("name", get("name"));
+          put("surname", get("surname"));
+          put("nationality", get("nationality"));
+          put("birthDate", get("birthDate"));
+          put("pesel", get("pesel"));
+          put("lastName", get("lastName"));
+          put("gender", get("gender"));
+          put("fatherSurname", get("fatherSurname"));
+          put("motherSurname", get("motherSurname"));
+          put("placeOfBirth", get("placeOfBirth"));
+          put("address", get("address"));
+          put("postalcode", get("postalcode"));
+          put("registrationDate", get("registrationDate"));
+          // mDowód
+          put("md_idSeries", get("idSeries"));
+          put("md_expiryDate", get("expiryDate"));
+          put("md_issueDate", get("issueDate"));
+          // Dowód osobisty
+          put("do_idSeries", get("idSeries_do"));
+          put("do_issuingAuthority", get("issuingAuthority_do"));
+          put("do_expiryDate", get("expiryDate_do"));
+          put("do_issueDate", get("issueDate_do"));
+          put("fathername", get("fathername"));
+          put("mothername", get("mothername"));
+          // DIIA.pl
+          put("diia_name", get("name_diia"));
+          put("diia_surname", get("surname_diia"));
+          put("diia_birthDate", get("birthDate_diia"));
+          put("diia_pesel", get("pesel_diia"));
+          put("diia_placeOfBirth", get("placeOfBirth_diia"));
+          put("diia_countryOfOrigin", get("countryOfOrigin_diia"));
+          put("diia_nationality", get("nationality_diia"));
+          // Legitymacja szkolna
+          put("display-name_legszk", get("display-name_legszk"));
+          put("display-surname_legszk", get("display-surname_legszk"));
+          put("display-birthDate_legszk", get("display-birthDate_legszk"));
+          put("display-pesel_legszk", get("display-pesel_legszk"));
+          put("display-cardNumber_legszk", get("display-cardNumber_legszk"));
+          put("display-issueDate_legszk", get("display-issueDate_legszk"));
+          put("display-expiryDate_legszk", get("display-expiryDate_legszk"));
+          put("display-schoolName_legszk", get("display-schoolName_legszk"));
+          put(
+            "display-schoolAddress_legszk",
+            get("display-schoolAddress_legszk")
+          );
+          put("display-schoolPhone_legszk", get("display-schoolPhone_legszk"));
+          put(
+            "display-schoolDirector_legszk",
+            get("display-schoolDirector_legszk")
+          );
+          // Legitymacja studencka
+          put("display-name_legstu", get("display-name_legstu"));
+          put("display-surname_legstu", get("display-surname_legstu"));
+          put("display-birthDate_legstu", get("display-birthDate_legstu"));
+          put("display-pesel_legstu", get("display-pesel_legstu"));
+          put("display-dataWydania_legstu", get("display-dataWydania_legstu"));
+          put("display-uczelnia_legstu", get("display-uczelnia_legstu"));
+          put("display-albumNumber_legstu", get("display-albumNumber_legstu"));
+          // Prawo jazdy
+          put("display-name_prawojazdy", get("display-name_prawojazdy"));
+          put("display-surname_prawojazdy", get("display-surname_prawojazdy"));
+          put(
+            "display-birthDate_prawojazdy",
+            get("display-birthDate_prawojazdy")
+          );
+          put(
+            "display-birthPlace_prawojazdy",
+            get("display-birthPlace_prawojazdy")
+          );
+          put("display-pesel_prawojazdy", get("display-pesel_prawojazdy"));
+          put(
+            "display-category_prawojazdy",
+            get("display-category_prawojazdy")
+          );
+          put("display-expiryDate_prawojazdy", "Bezterminowo");
+          put(
+            "display-issueDate_prawojazdy",
+            get("display-issueDate_prawojazdy")
+          );
+          put("display-blanketStatus_prawojazdy", "Wydany");
+          put(
+            "display-documentNumber_prawojazdy",
+            get("display-documentNumber_prawojazdy")
+          );
+          put(
+            "display-blanketNumber_prawojazdy",
+            get("display-blanketNumber_prawojazdy")
+          );
+          put(
+            "display-issuingAuthority_prawojazdy",
+            get("display-issuingAuthority_prawojazdy")
+          );
+          put("display-restrictions_prawojazdy", "Brak");
+        } catch (e) {
+          console.error("Error saving data:", e);
+        }
+      }
+
+      function generatePesel() {
+        const birthDate = document.getElementById("birthDate").value;
+        const gender = document.getElementById("gender").value;
+
+        if (!birthDate || !gender) {
+          alert("Wypełnij datę urodzenia i płeć");
+          return;
+        }
+
+        // Parse date: YYYY-MM-DD
+        const [year, month, day] = birthDate.split("-");
+        let yy = year.slice(2);
+        let mm = parseInt(month);
+
+        // Year 2000+: add 20 to month
+        if (parseInt(year) >= 2000) mm += 20;
+
+        // Format: YYMMDD + serial(3) + gender(1) + checksum(1)
+        const serial = String(Math.floor(Math.random() * 1000)).padStart(
+          3,
+          "0"
+        );
+        const genderDigit =
+          gender === "MĘŻCZYZNA"
+            ? String(1 + Math.floor(Math.random() * 5) * 2) // odd: 1,3,5,7,9
+            : String(0 + Math.floor(Math.random() * 5) * 2); // even: 0,2,4,6,8
+
+        const base =
+          yy + String(mm).padStart(2, "0") + day + serial + genderDigit;
+
+        // Checksum algorithm: weights [1,3,7,9,1,3,7,9,1,3]
+        const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+        let sum = 0;
+        for (let i = 0; i < 10; i++) {
+          sum += parseInt(base[i]) * weights[i];
+        }
+        const checksum = (10 - (sum % 10)) % 10;
+
+        const pesel = base + checksum;
+        document.getElementById("pesel").value = pesel;
+      }
+
+      function generatePeselDiia() {
+        const birthDate = document.getElementById("birthDate_diia").value;
+        const gender = document.getElementById("gender_diia").value;
+
+        if (!birthDate) {
+          alert("Wypełnij datę urodzenia");
+          return;
+        }
+
+        // Parse date: YYYY-MM-DD
+        const [year, month, day] = birthDate.split("-");
+        let yy = year.slice(2);
+        let mm = parseInt(month);
+
+        // Year 2000+: add 20 to month
+        if (parseInt(year) >= 2000) mm += 20;
+
+        // Format: YYMMDD + serial(3) + gender(1) + checksum(1)
+        const serial = String(Math.floor(Math.random() * 1000)).padStart(
+          3,
+          "0"
+        );
+        // Użyj wybranej płci jeśli jest dostępna, inaczej losowa
+        let genderDigit;
+        if (gender === "MĘŻCZYZNA") {
+          genderDigit = String(1 + Math.floor(Math.random() * 5) * 2); // odd: 1,3,5,7,9
+        } else if (gender === "KOBIETA") {
+          genderDigit = String(0 + Math.floor(Math.random() * 5) * 2); // even: 0,2,4,6,8
+        } else {
+          genderDigit = String(Math.floor(Math.random() * 10)); // losowa
+        }
+
+        const base =
+          yy + String(mm).padStart(2, "0") + day + serial + genderDigit;
+
+        // Checksum algorithm: weights [1,3,7,9,1,3,7,9,1,3]
+        const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+        let sum = 0;
+        for (let i = 0; i < 10; i++) {
+          sum += parseInt(base[i]) * weights[i];
+        }
+        const checksum = (10 - (sum % 10)) % 10;
+
+        const pesel = base + checksum;
+        document.getElementById("pesel_diia").value = pesel;
+      }
+
+      function generateMDowodNumber() {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let result = "";
+        // 4 litery
+        for (let i = 0; i < 4; i++) {
+          result += letters[Math.floor(Math.random() * 26)];
+        }
+        // 5 cyfr
+        for (let i = 0; i < 5; i++) {
+          result += Math.floor(Math.random() * 10);
+        }
+        document.getElementById("idSeries").value = result;
+      }
+
+      function generateDowodNumber() {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let result = "";
+        // 3 litery
+        for (let i = 0; i < 3; i++) {
+          result += letters[Math.floor(Math.random() * 26)];
+        }
+        // 6 cyfr
+        for (let i = 0; i < 6; i++) {
+          result += Math.floor(Math.random() * 10);
+        }
+        document.getElementById("idSeries_do").value = result;
+      }
+
+      function generateAllData() {
+        // Listy polskich imion i nazwisk
+        const maleNames = [
+          "JAN",
+          "PIOTR",
+          "KRZYSZTOF",
+          "ANDRZEJ",
+          "TOMASZ",
+          "PAWEŁ",
+          "MARCIN",
+          "MICHAŁ",
+          "JAKUB",
+          "MATEUSZ",
+          "ADAM",
+          "ŁUKASZ",
+          "KAMIL",
+          "ROBERT",
+          "MAREK",
+          "WOJCIECH",
+          "DANIEL",
+          "SEBASTIAN",
+          "BARTOSZ",
+          "GRZEGORZ",
+        ];
+        const femaleNames = [
+          "ANNA",
+          "MARIA",
+          "KATARZYNA",
+          "MAŁGORZATA",
+          "JOANNA",
+          "EWA",
+          "BARBARA",
+          "AGNIESZKA",
+          "MAGDALENA",
+          "MONIKA",
+          "KAROLINA",
+          "NATALIA",
+          "ALEKSANDRA",
+          "JULIA",
+          "PAULINA",
+          "MARTYNA",
+          "ZOFIA",
+          "WIKTORIA",
+          "ZUZANNA",
+          "ALEKSANDRA",
+        ];
+        const maleSurnames = [
+          "NOWAK",
+          "KOWALSKI",
+          "WIŚNIEWSKI",
+          "WÓJCIK",
+          "KOWALCZYK",
+          "KAMIŃSKI",
+          "LEWANDOWSKI",
+          "ZIELIŃSKI",
+          "SZYMAŃSKI",
+          "WOŹNIAK",
+          "DĄBROWSKI",
+          "KOZŁOWSKI",
+          "JANKOWSKI",
+          "MAZUR",
+          "KWIATKOWSKI",
+          "KRAWCZYK",
+          "KACZMAREK",
+          "PIOTROWSKI",
+          "GRABOWSKI",
+          "NOWAKOWSKI",
+        ];
+        const femaleSurnames = [
+          "NOWAK",
+          "KOWALSKA",
+          "WIŚNIEWSKA",
+          "WÓJCIK",
+          "KOWALCZYK",
+          "KAMIŃSKA",
+          "LEWANDOWSKA",
+          "ZIELIŃSKA",
+          "SZYMAŃSKA",
+          "WOŹNIAK",
+          "DĄBROWSKA",
+          "KOZŁOWSKA",
+          "JANKOWSKA",
+          "MAZUR",
+          "KWIATKOWSKA",
+          "KRAWCZYK",
+          "KACZMAREK",
+          "PIOTROWSKA",
+          "GRABOWSKA",
+          "NOWAKOWSKA",
+        ];
+        const cities = [
+          "WARSZAWA",
+          "KRAKÓW",
+          "POZNAŃ",
+          "WROCŁAW",
+          "GDAŃSK",
+          "ŁÓDŹ",
+          "KATOWICE",
+          "SZCZECIN",
+          "LUBLIN",
+          "BYDGOSZCZ",
+        ];
+        const streets = [
+          "GŁÓWNA",
+          "KRÓTKA",
+          "DŁUGA",
+          "POLNA",
+          "SŁONECZNA",
+          "KWIATOWA",
+          "LEŚNA",
+          "PARKOWA",
+          "OGRODOWA",
+          "SPACEROWA",
+        ];
+
+        // Sprawdź czy płeć została wybrana
+        const gender = document.getElementById("gender").value;
+        if (!gender) {
+          alert("⚠️ Najpierw wybierz płeć!");
+          return;
+        }
+
+        const isMale = gender === "MĘŻCZYZNA";
+
+        // Generuj imię i nazwisko na podstawie płci
+        const firstName = isMale
+          ? maleNames[Math.floor(Math.random() * maleNames.length)]
+          : femaleNames[Math.floor(Math.random() * femaleNames.length)];
+
+        // Wybierz losowe nazwisko odpowiednie dla płci
+        const surname = isMale
+          ? maleSurnames[Math.floor(Math.random() * maleSurnames.length)]
+          : femaleSurnames[Math.floor(Math.random() * femaleSurnames.length)];
+
+        document.getElementById("name").value = firstName;
+        document.getElementById("surname").value = surname;
+        document.getElementById("lastName").value = surname; // nazwisko rodowe takie samo
+
+        // Obywatelstwo polskie
+        document.getElementById("nationality").value = "POLSKIE";
+
+        // Data urodzenia - osoba ma obecnie 18 lat
+        const today = new Date();
+        const birthYear = today.getFullYear() - 18;
+        const birthMonth = String(Math.floor(Math.random() * 12) + 1).padStart(
+          2,
+          "0"
+        );
+        const birthDay = String(Math.floor(Math.random() * 28) + 1).padStart(
+          2,
+          "0"
+        );
+        const birthDate = `${birthYear}-${birthMonth}-${birthDay}`;
+        document.getElementById("birthDate").value = birthDate;
+
+        // Generuj PESEL na podstawie daty urodzenia i płci
+        generatePesel();
+
+        // Data wydania dowodu osobistego (10 lat ważności) - wcześniej niż mDowód
+        const doIssueDate = new Date(today);
+        doIssueDate.setDate(
+          doIssueDate.getDate() - Math.floor(Math.random() * 365 + 365)
+        ); // wydany 1-2 lata temu
+        const doIssueDateStr = doIssueDate.toISOString().split("T")[0];
+        document.getElementById("issueDate_do").value = doIssueDateStr;
+
+        // Data ważności dowodu osobistego - 10 lat od wydania
+        const doExpiryDate = new Date(doIssueDate);
+        doExpiryDate.setFullYear(doExpiryDate.getFullYear() + 10);
+        document.getElementById("expiryDate_do").value = doExpiryDate
+          .toISOString()
+          .split("T")[0];
+
+        // Data wydania mDowodu (5 lat ważności) - wydany po dowodzie osobistym
+        const mdIssueDate = new Date(today);
+        mdIssueDate.setDate(
+          mdIssueDate.getDate() - Math.floor(Math.random() * 365)
+        ); // wydany w ciągu ostatniego roku (później niż DO)
+        const mdIssueDateStr = mdIssueDate.toISOString().split("T")[0];
+        document.getElementById("issueDate").value = mdIssueDateStr;
+
+        // Data ważności mDowodu - 5 lat od wydania
+        const mdExpiryDate = new Date(mdIssueDate);
+        mdExpiryDate.setFullYear(mdExpiryDate.getFullYear() + 5);
+        document.getElementById("expiryDate").value = mdExpiryDate
+          .toISOString()
+          .split("T")[0];
+
+        // Generuj serię i numer mDowodu
+        generateMDowodNumber();
+
+        // Generuj serię i numer dowodu osobistego
+        generateDowodNumber();
+
+        // Organ wydający
+        const city = cities[Math.floor(Math.random() * cities.length)];
+        document.getElementById(
+          "issuingAuthority_do"
+        ).value = `PREZYDENT MIASTA ${city}`;
+
+        // Imiona rodziców
+        const fatherName =
+          maleNames[Math.floor(Math.random() * maleNames.length)];
+        const motherName =
+          femaleNames[Math.floor(Math.random() * femaleNames.length)];
+        document.getElementById("fathername").value = fatherName;
+        document.getElementById("mothername").value = motherName;
+
+        // Nazwiska rodowe rodziców
+        const fatherSurname =
+          maleSurnames[Math.floor(Math.random() * maleSurnames.length)];
+        const motherSurname =
+          femaleSurnames[Math.floor(Math.random() * femaleSurnames.length)];
+        document.getElementById("fatherSurname").value = fatherSurname;
+        document.getElementById("motherSurname").value = motherSurname;
+
+        // Miejsce urodzenia
+        document.getElementById("placeOfBirth").value = city;
+
+        // Adres zameldowania
+        const street = streets[Math.floor(Math.random() * streets.length)];
+        const houseNum = Math.floor(Math.random() * 100) + 1;
+        const flatNum =
+          Math.random() < 0.7 ? "/" + (Math.floor(Math.random() * 50) + 1) : "";
+        document.getElementById(
+          "address"
+        ).value = `UL. ${street} ${houseNum}${flatNum}`;
+
+        // Kod pocztowy
+        const postalFirst = String(Math.floor(Math.random() * 100)).padStart(
+          2,
+          "0"
+        );
+        const postalSecond = String(Math.floor(Math.random() * 1000)).padStart(
+          3,
+          "0"
+        );
+        document.getElementById(
+          "postalcode"
+        ).value = `${postalFirst}-${postalSecond} ${city}`;
+
+        // Data zameldowania - między datą urodzenia a 2024 rokiem
+        const birthDateObj = new Date(birthDate);
+        const endOfYear2024 = new Date(2024, 11, 31); // 31 grudnia 2024
+        const registrationTimestamp =
+          birthDateObj.getTime() +
+          Math.random() * (endOfYear2024.getTime() - birthDateObj.getTime());
+        const registrationDate = new Date(registrationTimestamp);
+        document.getElementById("registrationDate").value = registrationDate
+          .toISOString()
+          .split("T")[0];
+
+        // Zapisz dane
+        saveData();
+
+        alert("Dane wygenerowano!");
+      }
+
+      function generateAllDataDiia() {
+        // Listy ukraińskich imion i nazwisk (transkrypcja łacińska)
+        const maleNames = [
+          "OLEKSANDR",
+          "ANDRIY",
+          "VASYL",
+          "DMYTRO",
+          "IVAN",
+          "MAKSYM",
+          "MYKHAILO",
+          "OLEH",
+          "PETRO",
+          "SERHIY",
+          "TARAS",
+          "VIKTOR",
+          "VOLODYMYR",
+          "YURIY",
+          "BOHDAN",
+          "IHOR",
+          "ARTEM",
+          "DENYS",
+          "YEVHEN",
+          "ROMAN",
+        ];
+        const femaleNames = [
+          "OLENA",
+          "IRYNA",
+          "NATALIA",
+          "TETIANA",
+          "OKSANA",
+          "MARIA",
+          "HANNA",
+          "SVITLANA",
+          "YULIA",
+          "VALENTYNA",
+          "LIUBOV",
+          "HALYNA",
+          "VIKTORIA",
+          "KATERYNA",
+          "ANASTASIA",
+          "DARYNA",
+          "SOFIA",
+          "VIRA",
+          "LARYSA",
+          "LIUDMYLA",
+        ];
+        const maleSurnames = [
+          "MELNYK",
+          "SHEVCHENKO",
+          "BOIKO",
+          "KOVALENKO",
+          "BONDARENKO",
+          "TKACHENKO",
+          "KRAVCHENKO",
+          "KOVALCHUK",
+          "OLIYNYK",
+          "SHEVCHUK",
+          "KOVAL",
+          "POLISHCHUK",
+          "PETRENKO",
+          "LYTVYN",
+          "MARCHENKO",
+          "HONCHARENKO",
+          "ROMANENKO",
+          "SEMENENKO",
+          "LYSENKO",
+          "IVANENKO",
+        ];
+        const femaleSurnames = [
+          "MELNYK",
+          "SHEVCHENKO",
+          "BOIKO",
+          "KOVALENKO",
+          "BONDARENKO",
+          "TKACHENKO",
+          "KRAVCHENKO",
+          "KOVALCHUK",
+          "OLIYNYK",
+          "SHEVCHUK",
+          "KOVAL",
+          "POLISHCHUK",
+          "PETRENKO",
+          "LYTVYN",
+          "MARCHENKO",
+          "HONCHARENKO",
+          "ROMANENKO",
+          "SEMENENKO",
+          "LYSENKO",
+          "IVANENKO",
+        ];
+        const cities = [
+          "KYIV",
+          "KHARKIV",
+          "ODESA",
+          "DNIPRO",
+          "DONETSK",
+          "ZAPORIZHZHIA",
+          "LVIV",
+          "KRYVYI RIH",
+          "MYKOLAIV",
+          "MARIUPOL",
+          "LUHANSK",
+          "VINNYTSIA",
+          "KHERSON",
+          "POLTAVA",
+          "CHERNIHIV",
+        ];
+
+        // Sprawdź czy płeć została wybrana
+        const gender = document.getElementById("gender_diia").value;
+        if (!gender) {
+          alert("⚠️ Najpierw wybierz płeć!");
+          return;
+        }
+
+        const isMale = gender === "MĘŻCZYZNA";
+
+        // Generuj imię i nazwisko na podstawie płci
+        const firstName = isMale
+          ? maleNames[Math.floor(Math.random() * maleNames.length)]
+          : femaleNames[Math.floor(Math.random() * femaleNames.length)];
+
+        const surname = isMale
+          ? maleSurnames[Math.floor(Math.random() * maleSurnames.length)]
+          : femaleSurnames[Math.floor(Math.random() * femaleSurnames.length)];
+
+        document.getElementById("name_diia").value = firstName;
+        document.getElementById("surname_diia").value = surname;
+
+        // Data urodzenia - osoba ma obecnie 18 lat
+        const today = new Date();
+        const birthYear = today.getFullYear() - 18;
+        const birthMonth = String(Math.floor(Math.random() * 12) + 1).padStart(
+          2,
+          "0"
+        );
+        const birthDay = String(Math.floor(Math.random() * 28) + 1).padStart(
+          2,
+          "0"
+        );
+        const birthDate = `${birthYear}-${birthMonth}-${birthDay}`;
+        document.getElementById("birthDate_diia").value = birthDate;
+
+        // Generuj PESEL na podstawie daty urodzenia i płci
+        generatePeselDiia();
+
+        // Miejsce urodzenia
+        const city = cities[Math.floor(Math.random() * cities.length)];
+        document.getElementById("placeOfBirth_diia").value = city;
+
+        // Kraj pochodzenia i obywatelstwo - domyślnie Ukraina
+        document.getElementById("countryOfOrigin_diia").value = "UKRAINA";
+        document.getElementById("nationality_diia").value = "UKRAIŃSKIE";
+
+        // Zapisz dane
+        saveData();
+
+        alert("Dane wygenerowano!");
+      }
+
+      // Funkcja pomocnicza do generowania PESEL na podstawie daty i płci
+      function generatePeselFromDate(birthDateStr, gender) {
+        // Parse date: YYYY-MM-DD
+        const [year, month, day] = birthDateStr.split("-");
+        let yy = year.slice(2);
+        let mm = parseInt(month);
+
+        // Year 2000+: add 20 to month
+        if (parseInt(year) >= 2000) mm += 20;
+
+        // Format: YYMMDD + serial(3) + gender(1) + checksum(1)
+        const serial = String(Math.floor(Math.random() * 1000)).padStart(
+          3,
+          "0"
+        );
+        const genderDigit =
+          gender === "MĘŻCZYZNA"
+            ? String(1 + Math.floor(Math.random() * 5) * 2) // odd: 1,3,5,7,9
+            : String(0 + Math.floor(Math.random() * 5) * 2); // even: 0,2,4,6,8
+
+        const base =
+          yy + String(mm).padStart(2, "0") + day + serial + genderDigit;
+
+        // Checksum algorithm: weights [1,3,7,9,1,3,7,9,1,3]
+        const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+        let sum = 0;
+        for (let i = 0; i < 10; i++) {
+          sum += parseInt(base[i]) * weights[i];
+        }
+        const checksum = (10 - (sum % 10)) % 10;
+
+        return base + checksum;
+      }
+
+      // Generowanie PESEL dla Legitymacji szkolnej
+      function generatePeselLegszk() {
+        const birthDate = document.getElementById(
+          "display-birthDate_legszk"
+        ).value;
+        const gender = document.getElementById("gender_legszk").value;
+
+        if (!birthDate || !gender) {
+          alert("Wypełnij datę urodzenia i płeć");
+          return;
+        }
+
+        const pesel = generatePeselFromDate(birthDate, gender);
+        document.getElementById("display-pesel_legszk").value = pesel;
+      }
+
+      // Generowanie PESEL dla Legitymacji studenckiej
+      function generatePeselLegstu() {
+        const birthDate = document.getElementById(
+          "display-birthDate_legstu"
+        ).value;
+        const gender = document.getElementById("gender_legstu").value;
+
+        if (!birthDate || !gender) {
+          alert("Wypełnij datę urodzenia i płeć");
+          return;
+        }
+
+        const pesel = generatePeselFromDate(birthDate, gender);
+        document.getElementById("display-pesel_legstu").value = pesel;
+      }
+
+      // Generowanie PESEL dla Prawa jazdy
+      function generatePeselPrawojazdy() {
+        const birthDate = document.getElementById(
+          "display-birthDate_prawojazdy"
+        ).value;
+        const gender = document.getElementById("gender_prawojazdy").value;
+
+        if (!birthDate || !gender) {
+          alert("Wypełnij datę urodzenia i płeć");
+          return;
+        }
+
+        const pesel = generatePeselFromDate(birthDate, gender);
+        document.getElementById("display-pesel_prawojazdy").value = pesel;
+      }
+
+      // Generator danych dla Legitymacji szkolnej
+      function generateAllDataLegszk() {
+        const maleNames = [
+          "JAN",
+          "PIOTR",
+          "PAWEŁ",
+          "TOMASZ",
+          "MICHAŁ",
+          "KRZYSZTOF",
+        ];
+        const femaleNames = [
+          "ANNA",
+          "MARIA",
+          "KATARZYNA",
+          "EWA",
+          "ZOFIA",
+          "MONIKA",
+        ];
+        const maleSurnames = [
+          "KOWALSKI",
+          "NOWAK",
+          "WIŚNIEWSKI",
+          "WÓJCIK",
+          "KAMIŃSKI",
+        ];
+        const femaleSurnames = [
+          "KOWALSKA",
+          "NOWAK",
+          "WIŚNIEWSKA",
+          "WÓJCIK",
+          "KAMIŃSKA",
+        ];
+        const directorNames = maleNames.concat(femaleNames);
+        const directorSurnames = maleSurnames.concat(femaleSurnames);
+        const schools = [
+          "SZKOŁA PODSTAWOWA NR 1",
+          "SZKOŁA PODSTAWOWA NR 5",
+          "GIMNAZJUM NR 3",
+        ];
+        const cities = ["WARSZAWA", "KRAKÓW", "GDAŃSK", "WROCŁAW", "POZNAŃ"];
+
+        const genderSelect = document.getElementById("gender_legszk");
+        let gender =
+          (genderSelect && genderSelect.value) ||
+          (Math.random() > 0.5 ? "MĘŻCZYZNA" : "KOBIETA");
+        if (genderSelect) genderSelect.value = gender;
+
+        const selectedNames = gender === "MĘŻCZYZNA" ? maleNames : femaleNames;
+        const selectedSurnames =
+          gender === "MĘŻCZYZNA" ? maleSurnames : femaleSurnames;
+
+        document.getElementById("display-name_legszk").value =
+          selectedNames[Math.floor(Math.random() * selectedNames.length)];
+        document.getElementById("display-surname_legszk").value =
+          selectedSurnames[Math.floor(Math.random() * selectedSurnames.length)];
+
+        // Osoba musi mieć 18 lat (dla legitymacji szkolnej - uczniowie liceum)
+        const today = new Date();
+        const birthYear = today.getFullYear() - 18;
+        const birthDate = new Date(
+          birthYear,
+          Math.floor(Math.random() * 12),
+          1 + Math.floor(Math.random() * 28)
+        );
+        const birthDateStr = birthDate.toISOString().split("T")[0];
+        document.getElementById("display-birthDate_legszk").value =
+          birthDateStr;
+
+        // Generuj PESEL na podstawie daty i płci
+        const pesel = generatePeselFromDate(birthDateStr, gender);
+        document.getElementById("display-pesel_legszk").value = pesel;
+
+        // Numer legitymacji w formacie 1234/56
+        const num1 = String(Math.floor(1000 + Math.random() * 9000));
+        const num2 = String(Math.floor(10 + Math.random() * 90));
+        document.getElementById(
+          "display-cardNumber_legszk"
+        ).value = `${num1}/${num2}`;
+
+        const issueDate = new Date();
+        document.getElementById("display-issueDate_legszk").value = issueDate
+          .toISOString()
+          .split("T")[0];
+
+        // Data ważności: najbliższy 30 września
+        const todayForExpiry = new Date();
+        let expiryDate = new Date(todayForExpiry.getFullYear(), 8, 30); // Miesiąc 8 = wrzesień (0-indexed)
+
+        // Jeśli 30 września już minął w tym roku, weź następny rok
+        if (todayForExpiry > expiryDate) {
+          expiryDate = new Date(todayForExpiry.getFullYear() + 1, 8, 30);
+        }
+
+        document.getElementById("display-expiryDate_legszk").value = expiryDate
+          .toISOString()
+          .split("T")[0];
+        const city = cities[Math.floor(Math.random() * cities.length)];
+        const postalCode = `${String(
+          Math.floor(Math.random() * 90) + 10
+        ).padStart(2, "0")}-${String(Math.floor(Math.random() * 1000)).padStart(
+          3,
+          "0"
+        )}`;
+        document.getElementById("display-schoolName_legszk").value =
+          schools[Math.floor(Math.random() * schools.length)];
+        document.getElementById(
+          "display-schoolAddress_legszk"
+        ).value = `UL. SZKOLNA ${Math.floor(
+          1 + Math.random() * 50
+        )}, ${postalCode} ${city}`;
+        const phoneArea = ["22", "12", "58", "61", "71", "81", "91"][
+          Math.floor(Math.random() * 7)
+        ];
+        const phoneMid = `${Math.floor(Math.random() * 900 + 100)}`;
+        const phoneTail = `${Math.floor(Math.random() * 90 + 10)} ${Math.floor(
+          Math.random() * 90 + 10
+        )}`;
+        document.getElementById(
+          "display-schoolPhone_legszk"
+        ).value = `${phoneArea} ${phoneMid} ${phoneTail}`;
+        document.getElementById("display-schoolDirector_legszk").value =
+          directorNames[Math.floor(Math.random() * directorNames.length)] +
+          " " +
+          directorSurnames[Math.floor(Math.random() * directorSurnames.length)];
+
+        saveData();
+        alert("Dane wygenerowano!");
+      }
+
+      // Generator danych dla Legitymacji studenckiej
+      function generateAllDataLegstu() {
+        const maleNames = ["JAN", "PIOTR", "PAWEŁ", "TOMASZ", "MICHAŁ", "ADAM"];
+        const femaleNames = [
+          "ANNA",
+          "MARIA",
+          "KATARZYNA",
+          "EWA",
+          "ZOFIA",
+          "NATALIA",
+        ];
+        const maleSurnames = [
+          "KOWALSKI",
+          "NOWAK",
+          "WIŚNIEWSKI",
+          "WÓJCIK",
+          "KAMIŃSKI",
+        ];
+        const femaleSurnames = [
+          "KOWALSKA",
+          "NOWAK",
+          "WIŚNIEWSKA",
+          "WÓJCIK",
+          "KAMIŃSKA",
+        ];
+        const universities = [
+          "UNIWERSYTET WARSZAWSKI",
+          "POLITECHNIKA WARSZAWSKA",
+          "UNIWERSYTET JAGIELLOŃSKI",
+          "AGH",
+        ];
+
+        const genderSelect = document.getElementById("gender_legstu");
+        let gender =
+          (genderSelect && genderSelect.value) ||
+          (Math.random() > 0.5 ? "MĘŻCZYZNA" : "KOBIETA");
+        if (genderSelect) genderSelect.value = gender;
+
+        const selectedNames = gender === "MĘŻCZYZNA" ? maleNames : femaleNames;
+        const selectedSurnames =
+          gender === "MĘŻCZYZNA" ? maleSurnames : femaleSurnames;
+
+        document.getElementById("display-name_legstu").value =
+          selectedNames[Math.floor(Math.random() * selectedNames.length)];
+        document.getElementById("display-surname_legstu").value =
+          selectedSurnames[Math.floor(Math.random() * selectedSurnames.length)];
+
+        // Osoba musi mieć 18 lat
+        const today = new Date();
+        const birthYear =
+          today.getFullYear() - 18 - Math.floor(Math.random() * 10);
+        const birthDate = new Date(
+          birthYear,
+          Math.floor(Math.random() * 12),
+          1 + Math.floor(Math.random() * 28)
+        );
+        const birthDateStr = birthDate.toISOString().split("T")[0];
+        document.getElementById("display-birthDate_legstu").value =
+          birthDateStr;
+
+        // Generuj PESEL na podstawie daty i płci
+        const pesel = generatePeselFromDate(birthDateStr, gender);
+        document.getElementById("display-pesel_legstu").value = pesel;
+
+        const issueDate = new Date();
+        document.getElementById("display-dataWydania_legstu").value = issueDate
+          .toISOString()
+          .split("T")[0];
+
+        document.getElementById("display-uczelnia_legstu").value =
+          universities[Math.floor(Math.random() * universities.length)];
+        document.getElementById("display-albumNumber_legstu").value = String(
+          Math.floor(Math.random() * 1000000)
+        ).padStart(6, "0");
+
+        saveData();
+        alert("Dane wygenerowano!");
+      }
+
+      // Generator danych dla Prawa jazdy
+      function generateAllDataPrawojazdy() {
+        const maleNames = ["JAN", "PIOTR", "PAWEŁ", "TOMASZ", "MICHAŁ", "ADAM"];
+        const femaleNames = [
+          "ANNA",
+          "MARIA",
+          "KATARZYNA",
+          "EWA",
+          "ZOFIA",
+          "AGNIESZKA",
+        ];
+        const maleSurnames = [
+          "KOWALSKI",
+          "NOWAK",
+          "WIŚNIEWSKI",
+          "WÓJCIK",
+          "KAMIŃSKI",
+        ];
+        const femaleSurnames = [
+          "KOWALSKA",
+          "NOWAK",
+          "WIŚNIEWSKA",
+          "WÓJCIK",
+          "KAMIŃSKA",
+        ];
+        const birthCities = [
+          "WARSZAWA",
+          "KRAKÓW",
+          "POZNAŃ",
+          "LUBLIN",
+          "ŁÓDŹ",
+          "GDAŃSK",
+          "SZCZECIN",
+          "BYDGOSZCZ",
+          "RZESZÓW",
+          "OPOLE",
+        ];
+
+        const genderSelect = document.getElementById("gender_prawojazdy");
+        let gender =
+          (genderSelect && genderSelect.value) ||
+          (Math.random() > 0.5 ? "MĘŻCZYZNA" : "KOBIETA");
+        if (genderSelect) genderSelect.value = gender;
+
+        const selectedNames = gender === "MĘŻCZYZNA" ? maleNames : femaleNames;
+        const selectedSurnames =
+          gender === "MĘŻCZYZNA" ? maleSurnames : femaleSurnames;
+
+        document.getElementById("display-name_prawojazdy").value =
+          selectedNames[Math.floor(Math.random() * selectedNames.length)];
+        document.getElementById("display-surname_prawojazdy").value =
+          selectedSurnames[Math.floor(Math.random() * selectedSurnames.length)];
+
+        // Osoba musi mieć 18 lat (minimalna dla prawa jazdy)
+        const today = new Date();
+        const birthYear =
+          today.getFullYear() - 18 - Math.floor(Math.random() * 30);
+        const birthDate = new Date(
+          birthYear,
+          Math.floor(Math.random() * 12),
+          1 + Math.floor(Math.random() * 28)
+        );
+        const birthDateStr = birthDate.toISOString().split("T")[0];
+        document.getElementById("display-birthDate_prawojazdy").value =
+          birthDateStr;
+        document.getElementById("display-birthPlace_prawojazdy").value =
+          birthCities[Math.floor(Math.random() * birthCities.length)];
+
+        // Generuj PESEL na podstawie daty i płci
+        const pesel = generatePeselFromDate(birthDateStr, gender);
+        document.getElementById("display-pesel_prawojazdy").value = pesel;
+
+        const issueDate = new Date();
+        issueDate.setFullYear(
+          issueDate.getFullYear() - Math.floor(Math.random() * 5)
+        );
+        document.getElementById("display-issueDate_prawojazdy").value =
+          issueDate.toISOString().split("T")[0];
+
+        const docNumber = `${String(
+          Math.floor(Math.random() * 100000)
+        ).padStart(5, "0")}/${String(Math.floor(Math.random() * 100)).padStart(
+          2,
+          "0"
+        )}/${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`;
+        document.getElementById("display-documentNumber_prawojazdy").value =
+          docNumber;
+        document.getElementById(
+          "display-blanketNumber_prawojazdy"
+        ).value = `${String.fromCharCode(
+          65 + Math.floor(Math.random() * 26)
+        )}${String(Math.floor(Math.random() * 100000000)).padStart(8, "0")}`;
+        const authorityCities = [
+          "Warszawie",
+          "Lublinie",
+          "Poznaniu",
+          "Krakowie",
+          "Gdansku",
+          "Wroclawiu",
+          "Szczecinie",
+        ];
+        const authorityCity =
+          authorityCities[Math.floor(Math.random() * authorityCities.length)];
+        document.getElementById(
+          "display-issuingAuthority_prawojazdy"
+        ).value = `Starostwo Powiatowe w ${authorityCity}`;
+        saveData();
+        try {
+          localStorage.setItem("pj_generatedAt", String(Date.now()));
+        } catch (_) {}
+        alert("Dane wygenerowano!");
+      }
+
+      // Obsługa zakładek
+      function switchTab(tab) {
+        const tabs = ["mdowod", "diia", "legszk", "legstu", "prawojazdy"];
+
+        // Zaktualizuj wszystkie przyciski
+        tabs.forEach((t) => {
+          const tabBtn = document.getElementById(`${t}-tab`);
+          if (tabBtn) {
+            tabBtn.classList.toggle("tab-active", tab === t);
+            // ZMIANA: Kolory zakładek dla ciemnego tła
+            tabBtn.style.color = tab === t ? "#667eea" : "#888";
+            tabBtn.style.borderBottomColor =
+              tab === t ? "#667eea" : "transparent";
+            tabBtn.style.fontWeight = tab === t ? "500" : "400";
+          }
+        });
+
+        // Przełącz zawartość
+        tabs.forEach((t) => {
+          const content = document.getElementById(`${t}-content`);
+          if (content) {
+            content.style.display = tab === t ? "block" : "none";
+          }
+        });
+      }
+    </script>
+		<script src="/images.js" defer></script>
+  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c71498ace54bf25',t:'MTc2OTk0NzIxNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

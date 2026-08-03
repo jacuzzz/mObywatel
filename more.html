@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>mObywatel 4.0</title>
+
+    <!-- Apply theme immediately to prevent flash -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme-preference");
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = stored || (prefersDark ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Critical CSS inline dla szybszego renderowania -->
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        background-color: #f5f6fb;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      body.loaded {
+        opacity: 1;
+      }
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: #fff;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+
+    <!-- Dev Config - MUSI być pierwszy! -->
+    <script src="js/dev-config.js"></script>
+
+    <!-- CRITICAL SECURITY: Auth check BEFORE page loads -->
+    <script>
+      (function () {
+        "use strict";
+
+        // Dev mode check
+        if (window.DEV_CONFIG && window.DEV_CONFIG.DEV_MODE) {
+          console.warn("[Inline Security] 🔧 DEV_MODE - Pomijam sprawdzenia");
+          return;
+        }
+
+        function isMobile() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.ALLOW_DESKTOP) return true;
+          const ua = navigator.userAgent.toLowerCase();
+          return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+            ua
+          );
+        }
+        function isStandalone() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_PWA_CHECK)
+            return true;
+          return (
+            window.navigator.standalone === true ||
+            window.matchMedia("(display-mode: standalone)").matches ||
+            window.matchMedia("(display-mode: fullscreen)").matches
+          );
+        }
+        function hasAuthToken() {
+          if (window.DEV_CONFIG && window.DEV_CONFIG.SKIP_AUTH_CHECK) return;
+
+          try {
+            // Quick check: device must be activated (have refresh token)
+            // Full validation with backend happens in pwa-gate.js
+            const openRequest = indexedDB.open("obywatel_auth", 1);
+            openRequest.onsuccess = function (event) {
+              const db = event.target.result;
+              const tx = db.transaction("auth_state", "readonly");
+              const store = tx.objectStore("auth_state");
+              const getRequest = store.get("auth_state");
+              getRequest.onsuccess = function () {
+                const authState = getRequest.result;
+                // Only check if device is activated (has refresh token)
+                if (!authState || !authState.refreshToken) {
+                  window.location.href = "./index.html";
+                }
+              };
+              getRequest.onerror = function () {
+                window.location.href = "./index.html";
+              };
+            };
+            openRequest.onerror = function () {
+              window.location.href = "./index.html";
+            };
+          } catch (err) {
+            window.location.href = "./index.html";
+          }
+        }
+        if (!isMobile()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Desktop blocked");
+        }
+        if (!isStandalone()) {
+          window.location.href = "./index.html";
+          document.documentElement.style.display = "none";
+          throw new Error("Not standalone");
+        }
+        hasAuthToken();
+      })();
+    </script>
+
+    <!-- Resource hints dla lepszej wydajności -->
+    <link rel="dns-prefetch" href="//butilive.adadad1314asda.workers.dev" />
+    <link
+      rel="preconnect"
+      href="https://butilive.adadad1314asda.workers.dev"
+      crossorigin
+    />
+
+    <!-- Preload krytycznych zasobów -->
+    <link rel="preload" href="css/main.css" as="style" />
+    <link rel="preload" href="css/common.css" as="style" />
+    <link rel="preload" href="css/pages/more.css" as="style" />
+    <link
+      rel="preload"
+      href="assets/fonts/roboto_500_latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="manifest" href="manifest.json" />
+
+    <script src="js/api-client.js" defer></script>
+    <script src="js/pwa-gate.js" defer></script>
+    <script src="js/performance-boost.js" defer></script>
+
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/pages/more.css" />
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/overlay-camera.css" />
+
+    <script src="js/theme.js" defer></script>
+    <script src="js/update-checker.js" defer></script>
+    <script src="js/header.js" defer></script>
+    <script src="js/pages/more.js" defer></script>
+    <script src="js/protection.js"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          if (window.location.protocol === "file:") {
+            console.warn(
+              "[SW] Service Worker nie działa z file:// protokołem. Użyj lokalnego serwera HTTP."
+            );
+            return;
+          }
+
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(function (registration) {
+              console.log(
+                "[SW] ✅ Zarejestrowany pomyślnie:",
+                registration.scope
+              );
+              registration.update();
+            })
+            .catch(function (err) {
+              console.error("[SW] ❌ Rejestracja nie powiodła się:", err);
+            });
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-left">
+        <div id="inicjaly1">
+          <img
+            src="assets/icons/coi_common_ui_ic_mobywatel_logo.svg"
+            alt="mObywatel"
+          />
+        </div>
+        <span id="header-title" class="header-title">Wi&#281;cej</span>
+      </div>
+      <div class="header-right"></div>
+    </header>
+    <div class="bottom-nav">
+      <div
+        class="bottom-nav__tab unfill"
+        onclick="window.location.href='documents.html'"
+      >
+        <img src="assets/icons/if001_documents.svg" alt="home" />
+        <span>Dokumenty</span>
+      </div>
+      <div
+        class="bottom-nav__tab unfill"
+        onclick="window.location.href='services.html'"
+      >
+        <img src="assets/icons/if002_services.svg" alt="services" />
+        <span>Usługi</span>
+      </div>
+      <div
+        class="bottom-nav__tab unfill"
+        onclick="window.location.href='qr.html'"
+      >
+        <img src="assets/icons/if004_scan.svg" alt="qr" />
+        <span>Kod QR</span>
+      </div>
+      <div class="bottom-nav__tab bottom-nav__tab--active">
+        <img src="assets/icons/if010_more_fill.svg" alt="more" />
+        <span class="bottom-nav__active-text">Więcej</span>
+      </div>
+    </div>
+
+    <main class="page-main">
+      <h1 id="main-title" class="page-title">Więcej</h1>
+      <p class="category-title">Twoje Dane</p>
+
+      <div class="card-list">
+        <div
+          class="clickable-card"
+          style="text-decoration: none; color: inherit"
+        >
+          <div class="card">
+            <div class="card__left">
+              <img
+                src="assets/icons/aa033_address_book.svg"
+                alt="Dane kontaktowe"
+                width="25"
+                height="25"
+              />
+              <p>Dane kontaktowe</p>
+            </div>
+            <img
+              src="assets/icons/ic_arrow_forward_gray.svg"
+              alt="arrow"
+              width="24"
+              height="24"
+            />
+          </div>
+        </div>
+        <div class="separator"></div>
+        <div
+          class="clickable-card"
+          style="text-decoration: none; color: inherit"
+        >
+          <div class="card">
+            <div class="card__left">
+              <img
+                src="assets/icons/ag009_home_pin.svg"
+                alt="Dane zameldowania"
+                width="25"
+                height="25"
+              />
+              <p>Dane zameldowania</p>
+            </div>
+            <img
+              src="assets/icons/ic_arrow_forward_gray.svg"
+              alt="arrow"
+              width="24"
+              height="24"
+            />
+          </div>
+        </div>
+        <div class="separator"></div>
+        <div
+          class="clickable-card"
+          style="text-decoration: none; color: inherit"
+        >
+          <div class="card card--passport" id="passportCard">
+            <div class="card__left">
+              <img
+                src="assets/icons/ad002_selected_person.svg"
+                alt="Dane paszportu"
+                width="25"
+                height="25"
+              />
+              <p>Dane paszportu</p>
+            </div>
+            <img
+              src="assets/icons/ic_arrow_forward_gray.svg"
+              alt="arrow"
+              width="24"
+              height="24"
+            />
+          </div>
+        </div>
+      </div>
+
+      <p class="category-title">Ustawienia</p>
+      <div class="card-list">
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/aa008_change_password.svg"
+              alt="Zmień hasło"
+              width="25"
+              height="25"
+            />
+            <p>Zmień hasło</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/aa009_fingerprint.svg"
+              alt="Logowanie biometryczne"
+              width="25"
+              height="25"
+            />
+            <p>Logowanie biometryczne</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/ab013_notifications.svg"
+              alt="Powiadomienia"
+              width="25"
+              height="25"
+            />
+            <p>Powiadomienia</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/aa073_mode.svg"
+              alt="wygląd"
+              width="25"
+              height="25"
+            />
+            <p>Wygląd</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/ag005_globe.svg"
+              alt="Język aplikacji"
+              width="25"
+              height="25"
+            />
+            <p>Język aplikacji</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/ae001_published_certificate.svg"
+              alt="Wydane certyfikaty"
+              width="25"
+              height="25"
+            />
+            <p>Wydane certyfikaty</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+      </div>
+
+      <p class="category-title">Pozostałe</p>
+      <div class="card-list">
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/aa016_history.svg"
+              alt="Historia aktywności"
+              width="25"
+              height="25"
+            />
+            <p>Historia aktywności</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card" id="aboutAppCard">
+          <div class="card__left">
+            <img
+              src="assets/icons/c1_info.svg"
+              alt="O aplikacji"
+              width="25"
+              height="25"
+            />
+            <p>O aplikacji</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/ab015_help.svg"
+              alt="Pomoc techniczna"
+              width="25"
+              height="25"
+            />
+            <p>Pomoc techniczna</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/aa025_star.svg"
+              alt="Oceń aplikację"
+              width="25"
+              height="25"
+            />
+            <p>Oceń aplikację</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/af005_idea.svg"
+              alt="Zagłosuj na pomysł"
+              width="25"
+              height="25"
+            />
+            <p>Zagłosuj na pomysł</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <div class="card__left">
+            <img
+              src="assets/icons/aa028_deactivate.svg"
+              alt="Dezaktywuj aplikację"
+              width="25"
+              height="25"
+            />
+            <p>Dezaktywuj aplikację</p>
+          </div>
+          <img
+            src="assets/icons/ic_arrow_forward_gray.svg"
+            alt="arrow"
+            width="24"
+            height="24"
+          />
+        </div>
+      </div>
+
+      <div class="card-list" style="margin-top: 0em; margin-bottom: 0em">
+        <div class="card" onclick="window.location.href='index.html'">
+          <div class="card__left">
+            <img
+              src="assets/icons/ab019_logout.svg"
+              alt="Wyloguj się"
+              width="25"
+              height="25"
+            />
+            <p class="logout-text">Wyloguj się</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <section
+      id="themeOverlay"
+      class="camera-section"
+      hidden
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="themeSheetTitle"
+    >
+      <header class="app-header dowod-header">
+        <div class="header-left">
+          <a
+            href="#"
+            class="back-link"
+            onclick="try{ closeThemeOverlay(); }catch(_){ try{document.getElementById('themeOverlay').setAttribute('hidden',''); document.body.classList.remove('camera-open'); document.body.classList.remove('no-scroll'); }catch(_){ } } return false;"
+          >
+            <img
+              class="back-icon"
+              src="assets/icons/ab004_arrow_left.svg"
+              alt="Wstecz"
+            />
+          </a>
+          <span class="header-title fade-in" id="themeSheetTitle">Wygląd</span>
+        </div>
+      </header>
+      <div class="camera-overlay-content">
+        <h2 class="category-title">Kolorystyka</h2>
+        <div class="card-list" style="padding: 20px 24px">
+          <div class="card" data-theme="light">
+            <div class="card__left">
+              <input type="radio" name="theme-mode" value="light" />
+              <span>Tryb jasny</span>
+            </div>
+          </div>
+          <div class="separator"></div>
+          <div class="card" data-theme="dark">
+            <div class="card__left">
+              <input type="radio" name="theme-mode" value="dark" />
+              <span>Tryb ciemny</span>
+            </div>
+          </div>
+          <div class="separator"></div>
+          <div class="card" data-theme="auto">
+            <div class="card__left">
+              <input type="radio" name="theme-mode" value="auto" />
+              <div>
+                <span>Używaj ustawień urządzenia</span>
+                <p class="muted-desc" style="margin-top: 3px">
+                  Tryby jasny i ciemny będą się włączać<br />zgodnie z
+                  ustawieniami urządzenia.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
