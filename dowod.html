@@ -48,6 +48,17 @@
   <script>
     if ("serviceWorker" in navigator) { window.addEventListener("load", function () { if (window.location.protocol === "file:") { console.warn( "[SW] Service Worker nie działa z file:// protokołem. Użyj lokalnego serwera HTTP." ); return; } navigator.serviceWorker .register("/sw.js") .then(function (registration) { console.log( "[SW] ✅ Zarejestrowany pomyślnie:", registration.scope ); registration.update(); registration.addEventListener("updatefound", function () { console.log("[SW] Znaleziono aktualizację..."); const newWorker = registration.installing; newWorker.addEventListener("statechange", function () { console.log("[SW] Stan:", newWorker.state); }); }); }) .catch(function (err) { console.error("[SW] ❌ Rejestracja nie powiodła się:", err); }); navigator.serviceWorker.addEventListener( "controllerchange", function () { console.log("[SW] Kontroler zmieniony, przeładowanie strony..."); window.location.reload(); } ); }); } else { console.warn( "[SW] Service Worker nie jest wspierany w tej przeglądarce" ); }
   </script>
+  <style>
+    ::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background: transparent;
+}
+html, body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+  </style>
 </head>
 <body>
   <header class="app-header dowod-header">
