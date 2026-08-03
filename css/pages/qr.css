@@ -1,0 +1,567 @@
+.qr-page {
+  overflow: hidden;
+}
+
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-title {
+  font-weight: 500;
+  font-size: 1.7em;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  padding: 0 0 0 6px;
+}
+
+.qr-page-title {
+  font-weight: 500;
+  font-size: 1.7em;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  padding: 0 0 0 0px;
+}
+
+.page-subtitle {
+  font-size: 1em;
+  margin-left: 6px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 0.8em;
+  padding: 1em;
+  margin-top: 0.5em;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card__left {
+  display: flex;
+  align-items: center;
+}
+
+.card__left img {
+  width: 27px;
+  height: 27px;
+}
+
+.card p {
+  margin-left: 0.5em;
+  line-height: 1;
+}
+
+.card__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.card__text .card__title {
+  font-size: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 500;
+}
+
+.card__subtitle {
+  font-size: 0.9em;
+  color: #52575f;
+  margin-top: 0;
+}
+
+/* Ensure subtitle is not medium-weight inherited from .card__left p */
+.card__text .card__subtitle {
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 10px;
+    padding-top: 60px;
+  }
+}
+
+/* Camera preview container */
+.camera-section {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  z-index: 1000;
+  overflow: auto;
+}
+
+/* Overlay headers use the same soft background */
+.camera-section .app-header,
+.camera-section header.app-header,
+.camera-section .dowod-header {
+  background: var(--bg) !important;
+}
+
+.camera-frame {
+  position: relative;
+  background: #fff;
+  border-radius: 15px;
+  padding: 0px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  /* minimalny zapas, nie zwi�kszaj scrolla */
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.camera-viewport {
+  width: 100%;
+  min-height: 73vh;
+  max-height: 73vh;
+  border-radius: 20px;
+  overflow: hidden;
+  /* Show black placeholder while camera loads */
+  background: var(--bg);
+  position: relative;
+}
+
+/* Scanner overlay: make the camera card match the overlay bg */
+#camera-container .camera-frame {
+  background: var(--bg);
+  box-shadow: none;
+}
+
+.camera-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  object-position: center;
+  max-width: none;
+  display: block;
+  /* Ensure the video area is black before first frame */
+  background: var(--bg);
+}
+
+.camera-overlay-content {
+  padding: 16px;
+  padding-top: calc(90px + constant(safe-area-inset-top));
+  padding-top: calc(90px + env(safe-area-inset-top));
+}
+
+.qr-overlay-content {
+  padding: 16px;
+  padding-top: 70px;
+}
+
+.camera-hint {
+  color: #000;
+  font-weight: 400;
+  margin: -20px 2px -5px 2px;
+  white-space: normal;
+  width: 100%;
+  /* jedna linia */
+  text-align: center;
+}
+
+.qr-hint {
+  color: #000;
+  font-weight: 400;
+  margin: 15px 0 15px 0;
+  white-space: normal;
+  width: 100%;
+  /* jedna linia */
+  text-align: left;
+}
+
+/* Central QR guide corners */
+.qr-guides {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48%;
+  height: 28%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.qr-guides .corner {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border: 4px solid #fff;
+  background: transparent;
+}
+
+/* Dark mode: corners match background */
+[data-theme="dark"] .qr-guides .corner {
+  border-color: var(--bg);
+}
+
+.qr-guides .corner.tl {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 15px;
+}
+
+.qr-guides .corner.tr {
+  top: 0;
+  right: 0;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 15px;
+}
+
+.qr-guides .corner.bl {
+  bottom: 0;
+  left: 0;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 15px;
+}
+
+.qr-guides .corner.br {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 15px;
+}
+
+/* Ensure overlay header is on top and base header hidden while open */
+.camera-open>header.app-header {
+  display: none;
+}
+
+.camera-section .app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10001;
+  background: var(--bg);
+}
+
+/* Suppress header text only for the QR display overlay during initial open */
+.camera-opening #qr-code-container .app-header .header-title {
+  opacity: 0 !important;
+}
+
+/* Inline close button visible as fallback */
+.camera-close {
+  display: inline-flex;
+}
+
+/* CTA: Wpisz kod */
+.camera-cta {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: transparent;
+  color: var(--blue-active);
+  border: 1px solid var(--blue-active);
+  border-radius: 25px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.camera-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+/* Header tweaks to match dowodnowy look */
+.dowod-header .help-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.dowod-header .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.dowod-header .back-link .back-icon {
+  width: 25px;
+  height: 25px;
+}
+
+/* Align camera viewport width with hint and button */
+/* W nak�adce QR chcemy szersz� bia�� kart� (lewy/prawy padding) */
+.qr-overlay-content .camera-frame {
+  padding: 18px 16px;
+}
+
+/* Osobny styl dla ramek w nak�adce QR - bia�e t�o dla kodu QR i ikon */
+.qr-overlay-content .qr-display-frame {
+  background: #fff;
+  border-radius: 15px;
+  padding: 0px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.camera-hint {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Show QR overlay */
+.qr-display {
+  width: 100%;
+  min-height: 58vh;
+  /* tylko tyle, by da�o si� zakry� tytu� */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.qr-image {
+  width: 270px;
+  height: 270px;
+  max-width: 90vw;
+  max-height: 90vw;
+  object-fit: contain;
+  image-rendering: pixelated;
+  margin-top: 30px;
+}
+
+.qr-code-number {
+  font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-size: 2.3em;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+/* Icon row under QR (flaga + god�o) */
+.qr-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 50px;
+  padding-top: 22px;
+  padding-bottom: 22px;
+}
+
+.qr-icon {
+  height: 35px;
+  width: auto;
+}
+
+/* Icons inside white card shouldn't add extra top gap */
+.camera-frame .qr-icons {
+  margin-top: 0;
+}
+
+/* Dodatkowy zapas na dole, by da�o si� przewin�� pod nag��wek */
+.qr-overlay-content {
+  /* Zapas ~wysoko�ci nag��wka, aby da�o si� go przesun�� nad tytu� */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+}
+
+/* Countdown timer under digits */
+.qr-timer {
+  width: 80%;
+  margin-top: -12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 28px;
+}
+
+.qr-timer-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  font-size: 0.9em;
+  /* bar above, add spacing below it */
+}
+
+.qr-timer-label {
+  color: #6b7280;
+  /* szary */
+}
+
+.qr-timer-value {
+  color: #000;
+  /* czarny */
+  font-weight: 500;
+  /* lekko pogrubiony */
+}
+
+.qr-timer-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--blue-active-bg);
+  border-radius: 999px;
+  overflow: hidden;
+  order: -1;
+  /* show above the text */
+}
+
+.qr-timer-bar-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--blue-active);
+  border-radius: inherit;
+  /* width transition set dynamically in JS to match 180s */
+}
+
+/* Scanner overlay: remove camera frame around video */
+#camera-container .camera-frame {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Keep rounded corners on the viewport (use base 20px) */
+
+/* ===== GOD�O W QR z hologramem ===== */
+.qr-icon-wrapper {
+  position: relative;
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+}
+
+/* Szare god�o pod spodem */
+.qr-icon-wrapper .base-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../assets/orzel/godlo%20back.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: grayscale(100%) brightness(0.75);
+  opacity: 1;
+}
+
+/* Hologram kolorowy */
+.qr-icon-wrapper .holo-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 15% 10%,
+      rgba(150, 100, 255, 0.8) 0%,
+      transparent 40%),
+    radial-gradient(ellipse at 85% 15%,
+      rgba(70, 150, 255, 0.7) 0%,
+      transparent 45%),
+    radial-gradient(ellipse at 25% 35%,
+      rgba(50, 200, 240, 0.8) 0%,
+      transparent 40%),
+    radial-gradient(ellipse at 75% 45%,
+      rgba(80, 220, 160, 0.7) 0%,
+      transparent 42%),
+    radial-gradient(ellipse at 10% 55%,
+      rgba(180, 230, 80, 0.8) 0%,
+      transparent 38%),
+    radial-gradient(ellipse at 90% 65%,
+      rgba(255, 190, 80, 0.7) 0%,
+      transparent 43%),
+    radial-gradient(ellipse at 40% 75%,
+      rgba(255, 120, 120, 0.8) 0%,
+      transparent 40%),
+    radial-gradient(ellipse at 60% 85%,
+      rgba(255, 170, 100, 0.7) 0%,
+      transparent 45%),
+    radial-gradient(ellipse at 30% 90%,
+      rgba(190, 230, 120, 0.6) 0%,
+      transparent 40%),
+    linear-gradient(135deg,
+      #9664ff,
+      #4696ff,
+      #32c8f0,
+      #50dca0,
+      #b4e650,
+      #ffbe50,
+      #ff7878,
+      #ffaa64,
+      #b4e650,
+      #50dca0,
+      #32c8f0,
+      #4696ff,
+      #9664ff);
+  background-size: 100% 300%;
+  opacity: 0.7;
+  /* Widoczny od razu na nakładce QR */
+  background-position: center 50%;
+  transition: opacity 0.15s ease, background-position 0.2s ease;
+  -webkit-mask-image: url("../../assets/orzel/godlo%20back.png");
+  mask-image: url("../../assets/orzel/godlo%20back.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* Folia UV (mikro ziarno) */
+.qr-icon-wrapper .holo-grain {
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: overlay;
+  opacity: 0.22;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAQAAACRRt7bAAAAnElEQVR4Ae2WMQ7CMAxFv2iAhFqAhFaAhFKAhFCCTAbJ9ZhDJW60Trw7P3cu8+bbgDFQFQFQFQFSPTSMBK8RIDysV+UIPA9hKDlAdx5YAOq9gC4gQ0HTQ4P1LG2k8mAHc7txvR3Wp2LfEjAz2GBzKJxJ4zpBjJDMYFmq+4rvPY5p0kttDPbbn38DzS0vQwFVpFQFQFUFUPQpH4B8HqUBz5tRarQAAAABJRU5ErkJggg==");
+  background-size: 180px 180px;
+  animation: qr-grainMove 6s linear infinite;
+}
+
+@keyframes qr-grainMove {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 120px 180px;
+  }
+}
+
+/* Godło TOP */
+.qr-icon-wrapper .godlo-top {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../assets/orzel/godlo%20top.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+}

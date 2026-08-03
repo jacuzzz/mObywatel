@@ -1,0 +1,547 @@
+[data-theme="dark"] {
+  --bg: #101317;
+  --surface: #1f2328;
+  --text: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.70);
+  --border: #2b2b2b;
+  --blue-active: #4ba5ff;
+  --blue-active-bg: #0a284d;
+}
+
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] html,
+[data-theme="dark"] body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] header.app-header {
+  background: var(--bg) !important;
+}
+
+[data-theme="dark"] header .header-title {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .bottom-nav {
+  background-color: var(--bg) !important;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .list-card,
+[data-theme="dark"] .intro__icon {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .intro__label {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .container {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .muted {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] .page-title {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] a {
+  color: var(--blue-active) !important;
+}
+
+[data-theme="dark"] .category-title {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .separator {
+  background: var(--border) !important;
+  border-color: var(--border) !important;
+}
+
+/* Inputs and search */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] .search__input {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .search__input::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Login page tweaks */
+[data-theme="dark"] .login__form {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .login__logo-text,
+[data-theme="dark"] .login__title,
+[data-theme="dark"] .login__subtitle {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .login__version {
+  color: rgba(229, 231, 235, 0.65) !important;
+}
+
+[data-theme="dark"] .login__password-input {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .login__password-label {
+  color: var(--text-muted) !important;
+}
+
+/* Index login: muted accents in dark mode */
+[data-theme="dark"] .login__subtitle,
+[data-theme="dark"] .login__version {
+  color: var(--text-muted) !important;
+}
+
+/* Password input border to muted color in dark mode */
+[data-theme="dark"] .login__password-input {
+  border-color: var(--text-muted) !important;
+}
+
+/* Dark mode: active (focus) ring matches light mode */
+[data-theme="dark"] .login__password-input:focus,
+[data-theme="dark"] .login__password-input:focus-visible {
+  border-color: var(--blue-active) !important;
+  /* keep thickness from base (1.5px border) */
+  outline: 1px solid var(--blue-active);
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+[data-theme="dark"] body {
+  background-image: none !important;
+}
+
+[data-theme="dark"] .toolbox {
+  color: var(--blue-active) !important;
+}
+
+[data-theme="dark"] .qr-page .card,
+[data-theme="dark"] .page-main .card {
+  background: var(--surface) !important;
+}
+
+/* QR page (dark): mute icons, arrows and subtitles on tiles */
+[data-theme="dark"] .qr-page .card>img[alt="arrow"] {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .qr-page .card .card__left img {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .qr-page .card .card__subtitle {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .camera-section {
+  background: var(--bg) !important;
+}
+
+[data-theme="dark"] .camera-section .app-header {
+  background: var(--bg) !important;
+}
+
+[data-theme="dark"] .camera-frame {
+  background: var(--bg) !important;
+}
+
+[data-theme="dark"] .camera-viewport {
+  background: var(--bg) !important;
+}
+
+[data-theme="dark"] .camera-hint {
+  color: var(--text) !important;
+}
+
+/* Camera overlay CTA (dark): blue text, no fill, blue border */
+[data-theme="dark"] .camera-cta {
+  background: transparent !important;
+  color: var(--blue-active) !important;
+  border: 1px solid var(--blue-active) !important;
+}
+
+/* QR overlay (dark): description + counter to --text; label to --text-muted */
+[data-theme="dark"] #qr-code-container .qr-hint {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] #qr-code-container .qr-code-number,
+[data-theme="dark"] #qr-code-container .qr-timer-value {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] #qr-code-container .qr-timer-label {
+  color: var(--text-muted) !important;
+}
+
+/* QR display frames (kod QR i flaga) w trybie ciemnym mają tło --surface */
+[data-theme="dark"] .qr-overlay-content .qr-display-frame {
+  background: var(--surface) !important;
+}
+
+/* Dark mode: tint tile arrows and icons to text-muted */
+[data-theme="dark"] .page-main .card>img[alt="arrow"] {
+  /* convert to white, then apply 70% opacity to match --text-muted */
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+/* More page left-side icons (and similar tiles): mute color in dark mode */
+[data-theme="dark"] body>.page-main .card .card__left img {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+/* Dark-mode: swap specific icons to their _dark variants so they use the dark artwork */
+[data-theme="dark"] img[src$="ab019_logout.svg"],
+[data-theme="dark"] img[src$="../assets/icons/ab019_logout.svg"] {
+  /* prefer explicit dark asset if available */
+  content: url("../assets/icons/ab019_logout_dark.svg");
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] img[src$="if006_documents_fill.svg"],
+[data-theme="dark"] img[src$="../assets/icons/if006_documents_fill.svg"] {
+  content: url("../assets/icons/if006_documents_fill_dark.svg");
+}
+
+[data-theme="dark"] img[src$="if007_services_fill.svg"],
+[data-theme="dark"] img[src$="../assets/icons/if007_services_fill.svg"] {
+  content: url("../assets/icons/if007_services_fill_dark.svg");
+}
+
+[data-theme="dark"] img[src$="if009_scan_fill.svg"],
+[data-theme="dark"] img[src$="../assets/icons/if009_scan_fill.svg"] {
+  content: url("../assets/icons/if009_scan_fill_dark.svg");
+}
+
+[data-theme="dark"] img[src$="if010_more_fill.svg"],
+[data-theme="dark"] img[src$="../assets/icons/if010_more_fill.svg"] {
+  content: url("../assets/icons/if010_more_fill_dark.svg");
+}
+
+/* Swap horizontal mobywatel logo to dark variant when dark theme is active */
+[data-theme="dark"] img[src$="mobywatel_logo_horizontal.svg"],
+[data-theme="dark"] img[src$="../assets/icons/mobywatel_logo_horizontal.svg"] {
+  content: url("../assets/icons/mobywatel_logo_horizontal_dark.svg");
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Ensure logout text uses --blue-active in dark mode */
+[data-theme="dark"] .logout-text {
+  color: var(--blue-active) !important;
+}
+
+/* Ensure bottom-nav active icons are not muted in dark mode (show as active) */
+[data-theme="dark"] .bottom-nav .bottom-nav__tab--active img {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Bottom nav (dark): make inactive icons and labels text-muted */
+[data-theme="dark"] .bottom-nav .bottom-nav__tab.unfill span {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .bottom-nav .bottom-nav__tab.unfill img {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+/* More page (dark): keep list container background joined with cards */
+[data-theme="dark"] body>.page-main .card-list {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+/* Dowodnowy (dark): remove blue focus ring around quick action icons */
+[data-theme="dark"] .qa-item:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .dowod-header .back-link:focus-visible {
+  outline: none !important;
+}
+
+/* Dowodnowy (dark): quick action tiles use surface bg, text readable */
+[data-theme="dark"] .quick-actions .qa-item {
+  background: transparent !important;
+  color: var(--text) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Dowodnowy (dark): label under icons to --text */
+[data-theme="dark"] .quick-actions .qa-label {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .quick-actions .qa-item:first-child .qa-label,
+[data-theme="dark"] .quick-actions .qa-item:last-child .qa-label {
+  /* Keep original labels hidden when using ::before replacement */
+  color: transparent !important;
+}
+
+[data-theme="dark"] .quick-actions .qa-item:first-child .qa-label::before,
+[data-theme="dark"] .quick-actions .qa-item:last-child .qa-label::before {
+  color: var(--text) !important;
+}
+
+/* Dowodnowy (dark): circular icon background inside tiles */
+[data-theme="dark"] .quick-actions .qa-icon {
+  background: var(--surface) !important;
+}
+
+/* Dowodnowy (dark): header back arrow, help icon and time to text-muted */
+[data-theme="dark"] .dowod-header .back-link .back-icon,
+[data-theme="dark"] .dowod-header .help-icon {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] p.czas {
+  color: var(--text-muted) !important;
+}
+
+/* Dowodnowy (dark): white status bar under card -> surface */
+[data-theme="dark"] #bottom {
+  background: var(--surface) !important;
+}
+
+/* Dowodnowy (dark): data cards on page and in overlay */
+[data-theme="dark"] .details-card {
+  background: var(--surface) !important;
+}
+
+[data-theme="dark"] .details-card .divider {
+  background: var(--border) !important;
+}
+
+[data-theme="dark"] .list-card {
+  background: var(--surface) !important;
+}
+
+/* Dowodnowy (dark): fill white sheet in "Pozostałe skróty" overlay */
+[data-theme="dark"] #more-shortcuts-overlay .card-list {
+  background: var(--surface) !important;
+}
+
+/* Theme overlay (Wygląd) dark: fill sheet background */
+[data-theme="dark"] #themeOverlay .card-list {
+  background: var(--surface) !important;
+}
+
+/* More shortcuts overlay (dark): mute icons and arrows except trash icon */
+[data-theme="dark"] #more-shortcuts-overlay .card>img[alt="arrow"] {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] #more-shortcuts-overlay .card .card__left img {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+/* Do NOT mute trash icon in delete card */
+[data-theme="dark"] #more-shortcuts-overlay #delete-doc>img:first-child {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Dowodnowy (dark): data text colors */
+[data-theme="dark"] .details-card .main,
+[data-theme="dark"] .list-card .main,
+[data-theme="dark"] #extra-content .main,
+[data-theme="dark"] .dana .main {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .details-card .info,
+[data-theme="dark"] .list-card .info,
+[data-theme="dark"] #extra-content .info,
+[data-theme="dark"] .dana .info {
+  color: var(--text-muted) !important;
+}
+
+/* Dowodnowy (dark): lighten success status (icon + label) */
+[data-theme="dark"] #bottom {
+  color: #7ad66d;
+}
+
+[data-theme="dark"] #bottom p {
+  color: inherit !important;
+}
+
+[data-theme="dark"] #bottom .status-checkmark {
+  color: inherit !important;
+}
+
+/* Light mode: ensure checkmark matches the green text */
+#bottom .status-checkmark {
+  color: #317c26;
+}
+
+/* Dowodnowy (dark): "Twoje dodatkowe dane" expanded section background */
+[data-theme="dark"] #extra-content .content {
+  background: var(--surface) !important;
+}
+
+/* Dowodnowy (dark): separators in "Twoje dodatkowe dane" */
+[data-theme="dark"] .krecha,
+[data-theme="dark"] .krecha2 {
+  background-color: var(--border) !important;
+}
+
+/* Dashboard: notification bell color management */
+.dashboard-header #dzwonek svg {
+  color: #52575f;
+}
+
+[data-theme="dark"] .dashboard-header #dzwonek svg {
+  color: var(--text-muted);
+}
+
+.theme-overlay[hidden] {
+  display: none;
+}
+
+.theme-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.theme-sheet {
+  width: 100%;
+  max-width: 640px;
+  background: var(--surface);
+  color: var(--text);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 16px 16px 12px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.theme-sheet__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 4px 2px 10px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+}
+
+.theme-option+.theme-option {
+  border-top: 1px solid var(--border);
+}
+
+.theme-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.theme-actions .btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+}
+
+.btn-primary {
+  background: var(--blue-active);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+}
+
+[data-theme="dark"] button:not(.btn-primary) {
+  background: var(--blue-active);
+  color: var(--bg);
+  border: 1px solid var(--border);
+}
+
+/* Dowodnowy: keep toast/notification styling consistent in dark mode */
+/* Do not apply dark button styling to the notification close button */
+[data-theme="dark"] .notification .notification-close {
+  background: transparent !important;
+  color: #fff !important;
+  /* ensure white X */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure notification toast colors stay readable in dark mode */
+[data-theme="dark"] .notification {
+  background-color: #5f5f5f !important;
+  /* match light-theme toast bg */
+  color: #ffffff !important;
+}
+
+/* Index login: password eye button in dark mode */
+/* Remove blue bg coming from generic button rule and tint icon to --text-muted */
+[data-theme="dark"] .login__eye {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .login__eye img {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+/* Idcard data overlay (dark): mute icon and arrow in "Zmień PIN do podpisu osobistego" */
+[data-theme="dark"] #idcard-data-overlay #change-pin-link>img:first-child,
+[data-theme="dark"] #idcard-data-overlay #change-pin-link>img:last-child {
+  filter: grayscale(1) brightness(0) invert(1);
+  /* match var(--text-muted) */
+  opacity: 0.7;
+}

@@ -1,0 +1,241 @@
+.intro {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4em;
+  margin-top: 1.2em;
+}
+
+.intro__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.intro__icon img {
+  width: 28px;
+  height: 28px;
+}
+
+.intro__label {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #131419;
+  text-align: left;
+  margin: 0;
+}
+
+.intro__label.is-hidden {
+  display: none;
+}
+
+main {
+  margin: 0;
+  padding: 0;
+}
+
+.page-main {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* Ensure content is not hidden under fixed header/bottom nav */
+  padding: max(env(safe-area-inset-top), 60px) 16px calc(80px + 16px);
+  gap: 0;
+  /* control spacing via margins like services */
+}
+
+.page-title {
+  font-weight: 500;
+  font-size: 1.7rem;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  padding: 0 0 0 0;
+}
+
+.category-title {
+  margin-top: 6px;
+  /* match services */
+  margin-bottom: 5px;
+  /* match services */
+  font-size: 0.85rem;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.card-list {
+  background: #fff;
+  border-radius: 12px;
+  /* Equalize top/bottom spacing with middle separators */
+  padding: 20px 20px;
+  /* mniejsze wypełnienie, krótsze tło na górze/dole */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  margin: 16px 0 20px;
+  /* match services list spacing */
+}
+
+.clickable-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  padding: 7px 16px;
+  /* slightly slimmer */
+  cursor: pointer;
+  margin: 0;
+  /* separators handle vertical spacing */
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 28px;
+}
+
+.card__left {
+  display: flex;
+  align-items: center;
+}
+
+.card__left img {
+  width: 24px;
+  height: 24px;
+  /* przesunięcie ikony lekko w lewo na more.html */
+  margin-left: -18px;
+}
+
+.card__left p {
+  margin: 0 0 0 0px;
+  line-height: 1.2;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+/* Przesuń strzałkę (arrow forward gray) bardziej w prawo */
+.card .card__left+img[alt="arrow"] {
+  margin-right: -18px;
+  /* przesunięcie w prawo o 8px */
+}
+
+.separator {
+  height: 1px;
+  width: 100%;
+  background: #e1e3e8;
+  margin: 4px auto;
+  /* Wyśrodkowanie niezależnie od width (nawet >100%) */
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Subtle gray description under card title in overlays */
+.muted-desc {
+  margin: 2px 0 0 0;
+  color: var(--text-muted, #6b7280);
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+/* Radio + text alignment inside overlay cards */
+.camera-section .card__left {
+  gap: 10px;
+}
+
+#themeOverlay .card__left input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+/* Draw custom radio next to the label container (works for span or div) */
+#themeOverlay .card__left input[type="radio"]+* {
+  position: relative;
+  padding-left: 32px;
+}
+
+#themeOverlay .card__left input[type="radio"]+*::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  box-sizing: border-box;
+}
+
+#themeOverlay .card__left input[type="radio"]:checked+*::before {
+  border-color: var(--blue-active);
+}
+
+#themeOverlay .card__left input[type="radio"]:checked+*::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--blue-active);
+}
+
+[data-theme="dark"] #themeOverlay .card__left input[type="radio"]+*::before {
+  border-color: var(--text-muted);
+}
+
+/* Light mode: unselected ring color */
+[data-theme="light"] #themeOverlay .card__left input[type="radio"]+*::before {
+  border-color: #6b7280;
+}
+
+/* Dark mode: ensure selected ring is blue-active */
+[data-theme="dark"] #themeOverlay .card__left input[type="radio"]:checked+*::before {
+  border-color: var(--blue-active);
+}
+
+/* Light mode: ensure selected ring is blue-active too */
+[data-theme="light"] #themeOverlay .card__left input[type="radio"]:checked+*::before {
+  border-color: var(--blue-active);
+}
+
+/* Improve unselected visibility on dark theme: lighter ring, hollow center */
+[data-theme="dark"] #themeOverlay .card__left input[type="radio"] {
+  border-color: var(--text-muted);
+}
+
+/* Theme overlay: emphasize section title and shrink auto option description */
+#themeOverlay .card {
+  padding: 7px 16px 7px 0px;
+}
+
+#themeOverlay .category-title {
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin-top: -10px;
+}
+
+#themeOverlay [data-theme="auto"] .muted-desc {
+  font-size: 0.8rem;
+}
+
+/* Theme overlay labels: make primary option text bolder */
+#themeOverlay .card__left span {
+  font-weight: 500;
+}

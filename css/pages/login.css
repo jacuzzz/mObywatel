@@ -1,0 +1,628 @@
+:root {
+  --blue-active: #165ef8;
+  --gray-border: #b8c2d8;
+  --text-dark: #131419;
+  --text-muted: #5f6675;
+  /* JS-updated viewport unit to fix mobile 100vh issues */
+  --vh: 1vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img {
+  pointer-events: none;
+}
+
+html,
+body {
+  /* Strona nie przewija się – wysokość zawsze równa wysokości okna */
+  height: calc(var(--vh, 1vh) * 100);
+  overflow: hidden;
+  overscroll-behavior-y: none;
+  padding: 0;
+  margin: 0;
+  font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  background: #f3f7ff url("../../assets/icons/coi_common_ui_mobywatel_background.webp") center/cover no-repeat;
+  color: var(--text-dark);
+}
+
+/* Preferujemy nowoczesne jednostki, które stabilizują się w PWA/iOS */
+@supports (height: 100dvh) {
+
+  html,
+  body {
+    height: 100dvh;
+  }
+}
+
+@supports (height: 100svh) {
+
+  html,
+  body {
+    /* 100svh wygrywa – gwarantuje brak skoku przy paskach narzędzi */
+    height: 100svh;
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.spinner {
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  border: 0.2em solid #dfdfdf;
+  border-right-color: #dd1b42;
+  animation: spinner 1s linear infinite;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Układ strony: 3 rzędy (nagłówek, treść, footer) – footer zawsze widoczny */
+.login {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding-top: clamp(16px, 3.5vh, 44px);
+  padding-bottom: clamp(12px, 2.5vh, 28px);
+  gap: clamp(12px, 2.5vh, 32px);
+  box-sizing: border-box;
+  /* bez overflow na kontenerze strony – przewijanie tylko na sekcji main (gdy konieczne) */
+}
+
+@supports (height: 100svh) {
+  .login {
+    height: 100%;
+  }
+}
+
+@supports (height: 100dvh) {
+  .login {
+    height: 100%;
+  }
+}
+
+.login__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(12px, 2vh, 20px);
+  flex-shrink: 0;
+  margin-left: 20px;
+}
+
+.login__logo-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
+.login__logo-icon {
+  width: clamp(48px, 8.5vw, 64px);
+  height: clamp(48px, 8.5vw, 64px);
+  flex-shrink: 0;
+}
+
+.login__logo-image {
+  height: clamp(44px, 7vw, 60px);
+  width: auto;
+  flex-shrink: 0;
+}
+
+.login__logo-text {
+  font-size: clamp(1.65rem, 3.5vw, 2.15rem);
+  font-weight: 600;
+  color: var(--text-dark);
+  flex-shrink: 0;
+}
+
+.login__intro {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1vh, 8px);
+  flex-shrink: 0;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.login__title {
+  font-size: clamp(1.7rem, 3.35vw, 2.18rem);
+  font-weight: 500;
+  margin: 0;
+}
+
+.login__subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.login__main {
+  /* Kluczowe: pozwól temu wierszowi się kurczyć i ewentualnie scrollować wewnętrznie */
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  align-items: flex-start;
+  margin: 0 20px 0 20px;
+}
+
+.login__form {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20px;
+  padding: clamp(14px, 2vh, 18px) clamp(18px, 3vw, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.login__password-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.login__password {
+  position: relative;
+  width: 100%;
+}
+
+.login__password-input {
+  width: 100%;
+  padding: 14px 52px 14px 18px;
+  font-size: 1rem;
+  border: 1.5px solid rgba(145, 158, 187, 0.95);
+  background-color: #fdfdff;
+  border-radius: 11px;
+  caret-color: var(--blue-active);
+  color: var(--text-dark);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login__password-input::placeholder {
+  color: #8d95a6;
+}
+
+.login__password-input:focus {
+  border-color: #165ef8;
+  outline: 1px solid #165ef8;
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.login__eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+.login__eye img {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.login__forgot {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--blue-active);
+  margin-top: 5px;
+}
+
+.login__forgot:hover {
+  text-decoration: none;
+}
+
+.login__submit {
+  width: 92%;
+  background-color: var(--blue-active);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin: 0 auto;
+}
+
+/* Przycisk konfiguracji biometrii */
+.login__biometric-setup {
+  width: 92%;
+  background: linear-gradient(135deg, rgba(22, 94, 248, 0.1) 0%, rgba(22, 94, 248, 0.05) 100%);
+  border: 1.5px solid rgba(22, 94, 248, 0.3);
+  color: var(--blue-active);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 14px 20px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin: 8px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.login__biometric-setup:active {
+  transform: scale(0.98);
+  background: linear-gradient(135deg, rgba(22, 94, 248, 0.15) 0%, rgba(22, 94, 248, 0.08) 100%);
+}
+
+.login__biometric-setup-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .login__biometric-setup {
+  background: linear-gradient(135deg, rgba(22, 94, 248, 0.15) 0%, rgba(22, 94, 248, 0.08) 100%);
+  border-color: rgba(22, 94, 248, 0.4);
+}
+
+.login__submit:hover {
+  transform: translateY(-2px);
+}
+
+.login__submit:active {
+  transform: translateY(0);
+}
+
+.login__footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 92%;
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  gap: 8px;
+  margin: 0 auto;
+}
+
+.login__footerImages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.login__footerLogo {
+  height: clamp(20px, 3vh, 24px);
+  width: auto;
+  flex: 1 1 auto;
+  max-width: none;
+}
+
+.login__kpoLogo {
+  height: clamp(16px, 2.5vh, 20px);
+  margin-left: 4px;
+  flex: 1 1 auto;
+  max-width: none;
+}
+
+.login__version {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: rgba(19, 20, 25, 0.55);
+  margin: 0;
+  text-align: center;
+}
+
+/* Dark mode - zmień KPO logo */
+[data-theme="dark"] .login__kpoLogo {
+  content: url("../../assets/icons/coi_common_ui_kpo_logo_group_dark.svg");
+}
+
+/* Dark mode - zwiększ rozmiar ikonek stopki względem trybu jasnego */
+[data-theme="dark"] .login__footerLogo {
+  /* nieco większe niż jasna wersja */
+  height: clamp(24px, 4vh, 30px);
+}
+
+[data-theme="dark"] .login__kpoLogo {
+  /* zwiększ KPO logo w ciemnym motywie */
+  height: clamp(20px, 3.5vh, 24px);
+  /* content już ustawiony wyżej, ale powtarzamy dla pewności */
+  content: url("../../assets/icons/coi_common_ui_kpo_logo_group_dark.svg");
+}
+
+/* Fallback dla dark mode gdy CSS nie zadziała */
+@media (prefers-color-scheme: dark) {
+  [data-theme="dark"] .login__kpoLogo {
+    content: url("../../assets/icons/coi_common_ui_kpo_logo_group_dark.svg");
+  }
+
+  /* Fallback: też większe ikonki w przypadku preferencji ciemnego motywu */
+  [data-theme="dark"] .login__footerLogo {
+    height: clamp(24px, 4vh, 30px);
+  }
+
+  [data-theme="dark"] .login__kpoLogo {
+    height: clamp(20px, 3.5vh, 24px);
+    content: url("../../assets/icons/coi_common_ui_kpo_logo_group_dark.svg");
+  }
+}
+
+@media (max-width: 600px) {
+  .login {
+    padding-top: clamp(12px, 2.5vh, 28px);
+    padding-bottom: clamp(10px, 2vh, 20px);
+    gap: clamp(10px, 2vh, 24px);
+  }
+
+  .login__logo-group {
+    gap: 10px;
+  }
+
+  .login__form {
+    padding: clamp(10px, 1.8vh, 16px) clamp(14px, 2.5vw, 20px);
+  }
+}
+
+@media (max-height: 700px) {
+  .login {
+    padding-top: 16px;
+    padding-bottom: 12px;
+    gap: 12px;
+  }
+
+  .login__header {
+    gap: 10px;
+  }
+
+  .login__intro {
+    gap: 4px;
+  }
+
+  .login__logo-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .login__form {
+    padding: 12px 18px;
+  }
+
+  .login__footerLogo {
+    height: 20px;
+  }
+
+  .login__kpoLogo {
+    height: 16px;
+  }
+}
+
+@media (max-height: 600px) {
+  .login {
+    padding-top: 12px;
+    padding-bottom: 10px;
+    gap: 10px;
+  }
+
+  .login__header {
+    gap: 8px;
+  }
+
+  .login__logo-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .login__form {
+    padding: 10px 16px;
+  }
+
+  .login__footerLogo {
+    height: 18px;
+  }
+
+  .login__kpoLogo {
+    height: 14px;
+    margin-left: 3px;
+  }
+
+  .login__version {
+    font-size: 0.7rem;
+  }
+}
+
+/* Error state styles for password input */
+.login__password-input.input-error {
+  border: 1.5px solid #b91c1c !important;
+  outline: none;
+}
+
+.login__password-input.input-error:focus {
+  border-color: #b91c1c !important;
+  /* thicker on focus */
+  outline: 1px solid #b91c1c;
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+/* Warning icon styles */
+.login__error.warn::before {
+  content: "\26A0\FE0E";
+  font-size: 1.25em;
+  margin-right: 6px;
+  vertical-align: -0.05em;
+  display: inline-block;
+}
+
+/* Prefer :has() to drive error state from the visible error message */
+@supports selector(.login__form:has(#passwordError)) {
+  .login__form:has(#passwordError:not([style*="display: none"])) .login__password-input {
+    border: 1.5px solid #b91c1c !important;
+    outline: none;
+  }
+
+  .login__form:has(#passwordError:not([style*="display: none"])) .login__password-input:focus {
+    border-color: #b91c1c !important;
+    /* thicker on focus, mirroring blue focus */
+    outline: 1px solid #b91c1c;
+    outline-offset: 0;
+    box-shadow: none;
+  }
+}
+
+/* ========== BIOMETRIC AUTHENTICATION STYLES ========== */
+
+.login__biometric-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.login__divider {
+  width: 100%;
+  text-align: center;
+  position: relative;
+  margin: 8px 0;
+}
+
+.login__divider::before,
+.login__divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: calc(50% - 30px);
+  height: 1px;
+  background: rgba(145, 158, 187, 0.35);
+}
+
+.login__divider::before {
+  left: 0;
+}
+
+.login__divider::after {
+  right: 0;
+}
+
+.login__divider-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 0 8px;
+  background: rgba(255, 255, 255, 0.96);
+  position: relative;
+  z-index: 1;
+}
+
+.login__biometric-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.5px solid rgba(145, 158, 187, 0.6);
+  border-radius: 11px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--blue-active);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.login__biometric-btn:hover {
+  border-color: var(--blue-active);
+  background: rgba(22, 94, 248, 0.04);
+  transform: translateY(-1px);
+}
+
+.login__biometric-btn:active {
+  transform: translateY(0);
+}
+
+.login__biometric-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login__biometric-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .login__divider-text {
+  background: rgba(30, 30, 35, 0.96);
+}
+
+[data-theme="dark"] .login__biometric-btn {
+  background: rgba(30, 30, 35, 0.96);
+  border-color: rgba(145, 158, 187, 0.4);
+}
+
+[data-theme="dark"] .login__biometric-btn:hover {
+  background: rgba(22, 94, 248, 0.08);
+  border-color: var(--blue-active);
+}
+
+/* Responsive adjustments */
+@media (max-height: 700px) {
+  .login__biometric-container {
+    gap: 12px;
+    margin-top: 12px;
+  }
+  
+  .login__biometric-btn {
+    padding: 12px 18px;
+  }
+  
+  .login__divider {
+    margin: 6px 0;
+  }
+}
+
+@media (max-height: 600px) {
+  .login__biometric-container {
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .login__biometric-btn {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+  
+  .login__biometric-icon {
+    width: 22px;
+    height: 22px;
+  }
+}

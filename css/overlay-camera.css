@@ -1,0 +1,209 @@
+.camera-section {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  z-index: 1000;
+  overflow: auto;
+}
+
+.camera-section .app-header,
+.camera-section header.app-header,
+.camera-section .dowod-header {
+  background: var(--bg) !important;
+}
+
+.camera-frame {
+  position: relative;
+  background: #fff;
+  border-radius: 15px;
+  padding: 14px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.camera-viewport {
+  width: 100%;
+  min-height: 73vh;
+  max-height: 73vh;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--bg);
+  position: relative;
+}
+
+#camera-container .camera-frame {
+  background: var(--bg);
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.camera-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  object-position: center;
+  max-width: none;
+  display: block;
+  background: var(--bg);
+}
+
+.camera-overlay-content {
+  padding: 16px;
+  padding-top: calc(90px + env(safe-area-inset-top));
+}
+
+.camera-hint {
+  color: #000;
+  font-weight: 400;
+  margin: -20px 2px -5px 2px;
+  white-space: nowrap;
+  letter-spacing: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.qr-frame-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  height: auto;
+  pointer-events: none;
+  z-index: 2;
+  display: block;
+}
+
+.qr-frame-light {
+  display: block;
+}
+
+.qr-frame-dark {
+  display: none;
+}
+
+[data-theme="dark"] .qr-frame-light {
+  display: none;
+}
+
+[data-theme="dark"] .qr-frame-dark {
+  display: block;
+}
+
+.camera-open>header.app-header {
+  display: none;
+}
+
+.camera-section .app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10001;
+  background: var(--bg);
+}
+
+.camera-opening #qr-code-container .app-header .header-title {
+  opacity: 0 !important;
+}
+
+.camera-cta {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: transparent;
+  color: var(--blue-active);
+  border: 1px solid var(--blue-active);
+  border-radius: 25px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.dowod-header .help-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.dowod-header .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.dowod-header .back-link .back-icon {
+  width: 25px;
+  height: 25px;
+}
+
+.camera-frame {
+  padding: 5px 0;
+}
+
+.camera-hint {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.help-overlay-content {
+  text-align: left;
+}
+
+.help-hero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin: -20px 0 15px 0;
+  background: var(--blue-active-bg);
+  border-radius: 50%;
+}
+
+.help-hero__img {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.help-title {
+  margin: 0 0 10px 0;
+  font-size: 1.7em;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  color: var(--text, #131419);
+}
+
+.help-desc {
+  margin: 10px 0 12px 0;
+  font-size: 15px;
+  color: var(--text-muted, #6b7280);
+}
+
+.help-list {
+  margin: 15px 0 0;
+  padding-left: 20px;
+  list-style: disc;
+  color: var(--text-muted, #6b7280);
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.help-list li {
+  margin: 15px 0;
+  line-height: 1.4;
+}
